@@ -112,7 +112,7 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
             Sains <span className="text-[#721010]">Sumatrawala</span>
           </h1>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest px-4 max-w-sm mx-auto">
-            Metode Pembelajaran IPA Berbasis Kearifan Lokal & Eksplorasi Fenomena Alam
+            Media Pembelajaran IPA Berbasis Kearifan Lokal & Eksplorasi Fenomena Alam
           </p>
         </div>
       </header>
