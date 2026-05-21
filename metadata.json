@@ -1,0 +1,6 @@
+{
+  "name": "Sumatrawala: Sains & Mitigasi Sumatra",
+  "description": "Aplikasi edukasi sains & mitigasi bencana interaktif di Sumatra: Rumah Nias, Letusan Toba, Energi Hijau, & Hutan Larangan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
