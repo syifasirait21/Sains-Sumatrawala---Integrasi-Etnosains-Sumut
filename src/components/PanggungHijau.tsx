@@ -917,35 +917,33 @@ export default function PanggungHijau({ onBack }: PanggungHijauProps) {
       </AnimatePresence>
 
       {/* --- BOTTOM DASHBOARD NAVIGATION --- */}
-      {currentPage !== 'dashboard' && (
-        <nav className="bg-cream-bg/95 backdrop-blur-md border-t border-stone-200 h-16 flex items-center justify-around fixed bottom-0 w-full max-w-md z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  playSound('knock');
-                  setCurrentPage(item.id);
-                }}
-                className={`flex flex-col items-center justify-center flex-1 h-full transition-colors relative ${
-                  isActive ? 'text-emerald-600' : 'text-stone-400'
-                }`}
-              >
-                <Icon size={18} className={isActive ? 'fill-emerald-500/10' : ''} />
-                <span className="text-[9px] mt-1 font-bold">{item.label}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="hijau-nav-indicator"
-                    className="absolute bottom-0 w-8 h-1 bg-emerald-600 rounded-t-full"
-                  />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      )}
+      <nav className="bg-cream-bg/95 backdrop-blur-md border-t border-stone-200 h-16 flex items-center justify-around fixed bottom-0 w-full max-w-md z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentPage === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                playSound('knock');
+                setCurrentPage(item.id);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 h-full transition-colors relative ${
+                isActive ? 'text-emerald-600' : 'text-stone-400'
+              }`}
+            >
+              <Icon size={18} className={isActive ? 'fill-emerald-500/10' : ''} />
+              <span className="text-[9px] mt-1 font-bold">{item.label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="hijau-nav-indicator"
+                  className="absolute bottom-0 w-8 h-1 bg-emerald-600 rounded-t-full"
+                />
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
