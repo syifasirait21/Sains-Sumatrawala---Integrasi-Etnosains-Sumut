@@ -1000,7 +1000,7 @@ function DashboardPage({ onSelect, onBackToMenu }: { onSelect: (p: Page) => void
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 space-y-8 min-h-screen bg-cream-bg relative overflow-hidden"
+      className="p-6 space-y-8 min-h-screen bg-cream-bg relative overflow-visible"
     >
       {/* Dynamic Nias Pattern Background */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">

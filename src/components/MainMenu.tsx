@@ -62,17 +62,6 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
       bgColor: 'bg-teal-50',
       bannerColor: 'bg-gradient-to-r from-teal-700 to-emerald-700',
       badge: 'EKOLOGI & BIODIVERSITAS'
-    },
-    {
-      id: 'kuis' as const,
-      title: 'Kuis Sains Terpadu',
-      desc: 'Uji wawasan sains lokalmu, raih skor tertinggi, & dapatkan lencana Ahli Sains Sumatra Utara.',
-      icon: HelpCircle,
-      accent: 'text-amber-500',
-      bgRing: 'ring-amber-100',
-      bgColor: 'bg-amber-50',
-      bannerColor: 'bg-gradient-to-r from-amber-500 to-yellow-600',
-      badge: 'EVALUASI AKADEMIK'
     }
   ];
 
@@ -90,7 +79,7 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
-      className="p-6 space-y-8 min-h-screen bg-cream-bg relative overflow-hidden"
+      className="p-6 space-y-8 h-full bg-cream-bg relative overflow-y-auto no-scrollbar"
     >
       {/* Repeating Nias/Batak Geometric Pattern Background */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none -z-10" 
@@ -136,7 +125,7 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
             <h2 className="text-xs font-black uppercase tracking-widest text-stone-800">Pilih Jalur Belajar IPA</h2>
           </div>
           <span className="text-[9px] font-bold px-2.5 py-0.5 bg-stone-200 text-stone-600 rounded-full tracking-widest uppercase">
-            5 JALUR
+            4 JALUR
           </span>
         </div>
 
@@ -198,12 +187,6 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
 
       {/* Credit Footer */}
       <footer className="pt-8 pb-4 text-center space-y-2">
-        <div className="flex justify-center items-center gap-1 opacity-40">
-          <Award size={14} className="text-stone-700" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
-            PROYEK AKADEMIK IPA UNIMED
-          </span>
-        </div>
         <p className="text-[8px] font-bold text-stone-400 max-w-xs mx-auto leading-relaxed">
           Dirancang untuk pembelajaran mitigasi, etnosains, dan konservasi alam wilayah Sumatera Utara secara digital interaktif.
         </p>
