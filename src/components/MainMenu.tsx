@@ -118,7 +118,7 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
       </header>
 
       {/* Main Roadmap Options */}
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-1.5">
             <Compass size={16} className="text-[#721010]" />
@@ -129,55 +129,52 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
           </span>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
           {menus.map((menu, index) => {
             const Icon = menu.icon;
             return (
               <motion.button
                 key={menu.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, type: 'spring', stiffness: 260, damping: 20 }}
-                whileHover={{ y: -4, scale: 1.015 }}
-                whileTap={{ scale: 0.985 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05, type: 'spring', stiffness: 200, damping: 15 }}
+                whileHover={{ y: -4, scale: 1.02, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.04)' }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => {
                   playClick();
                   onSelect(menu.id);
                 }}
-                className="w-full text-left bg-white rounded-[28px] border border-stone-200/60 p-5 shadow-sm hover:shadow-xl active:shadow-md transition-shadow duration-300 relative overflow-hidden group flex gap-4 items-start"
+                className="group relative flex flex-col justify-between items-start p-4 bg-white rounded-[24px] border border-stone-200/60 aspect-square text-left overflow-hidden transition-all duration-300 shadow-sm cursor-pointer hover:border-stone-300"
               >
-                {/* Background Banner accent color on hover */}
-                <div className="absolute top-0 left-0 w-1.5 h-full transition-all group-hover:w-3 duration-300" style={{ backgroundColor: 'currentColor' }} />
+                {/* Decorative background accent blob */}
+                <div className="absolute -right-4 -bottom-4 w-16 h-16 rounded-full opacity-[0.03] group-hover:scale-150 group-hover:opacity-[0.08] transition-all duration-500" style={{ backgroundColor: 'currentColor' }} />
                 
-                {/* Visual Icon Container */}
-                <div className={`p-4 rounded-2xl ring-4 ${menu.bgRing} ${menu.bgColor} ${menu.accent} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shrink-0`}>
-                  <Icon size={24} strokeWidth={2.5} />
+                {/* Icon Panel */}
+                <div className="flex justify-between items-start w-full">
+                  <div className={`p-3 rounded-2xl ring-4 ${menu.bgRing} ${menu.bgColor} ${menu.accent} group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
+                    <Icon size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="text-stone-300 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all duration-300">
+                    <ChevronRight size={16} strokeWidth={3} />
+                  </div>
                 </div>
 
-                {/* Text Block */}
-                <div className="space-y-1.5 flex-1 pr-6 relative">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[8px] font-black tracking-widest text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full uppercase">
-                      {menu.badge}
+                {/* Info block */}
+                <div className="space-y-1 mt-auto">
+                  <div className="flex flex-wrap items-center gap-1 mb-0.5">
+                    <span className="text-[7.5px] font-black tracking-wider text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded uppercase">
+                      {menu.badge.split(' & ')[0]}
                     </span>
                     {menu.id === 'nias' && (
-                      <span className="text-[8px] font-black tracking-widest text-white bg-amber-500 px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
-                        <Sparkles size={8} className="fill-white" />
-                        3D MODEL
+                      <span className="text-[7.5px] font-black tracking-wider text-white bg-[#721010] px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5">
+                        <Sparkles size={6} className="fill-white" />
+                        3D
                       </span>
                     )}
                   </div>
-                  <h3 className="text-base font-black text-stone-900 leading-tight tracking-tight pr-4">
+                  <h3 className="text-xs font-black text-stone-900 leading-tight tracking-tight">
                     {menu.title}
                   </h3>
-                  <p className="text-[10px] text-stone-600 font-bold leading-normal pr-4">
-                    {menu.desc}
-                  </p>
-                </div>
-
-                {/* Circle Arrow on hover */}
-                <div className="absolute bottom-5 right-5 w-8 h-8 rounded-full bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-300 group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all duration-300 shadow-sm shrink-0">
-                  <ChevronRight size={16} strokeWidth={3} />
                 </div>
               </motion.button>
             );
@@ -186,7 +183,7 @@ export default function MainMenu({ onSelect }: MainMenuProps) {
       </div>
 
       {/* Credit Footer */}
-      <footer className="pt-8 pb-4 text-center space-y-2">
+      <footer className="pt-4 pb-2 text-center">
         <p className="text-[8px] font-bold text-stone-400 max-w-xs mx-auto leading-relaxed">
           Dirancang untuk pembelajaran mitigasi, etnosains, dan konservasi alam wilayah Sumatera Utara secara digital interaktif.
         </p>
