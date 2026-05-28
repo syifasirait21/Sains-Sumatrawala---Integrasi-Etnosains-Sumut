@@ -60,9 +60,41 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
   const [activeTab, setActiveTab] = useState<'etno' | 'science'>('etno');
   const [viscosity, setViscosity] = useState<'basaltic' | 'andesitic' | 'rhyolitic'>('rhyolitic');
   const [pressure, setPressure] = useState<'low' | 'medium' | 'extreme'>('extreme');
+  const [silicaVal, setSilicaVal] = useState<number>(72); // Persentase Silika 45% - 75%
+  const [pressureVal, setPressureVal] = useState<number>(130); // Tekanan Gas 10 - 150 MPa
   const [isSimulating, setIsSimulating] = useState(false);
   const [simResult, setSimResult] = useState<string | null>(null);
-  const [magmaTemp, setMagmaTemp] = useState(850); // Celcius
+  const [magmaTemp, setMagmaTemp] = useState(750); // Celcius
+
+  // Sync silicaVal with viscosity categories and live temperature mapping
+  useEffect(() => {
+    if (silicaVal <= 52) {
+      setViscosity('basaltic');
+      const ratio = (silicaVal - 45) / (52 - 45);
+      setMagmaTemp(Math.round(1200 - ratio * 200)); // 1200°C to 1000°C
+    } else if (silicaVal <= 65) {
+      setViscosity('andesitic');
+      const ratio = (silicaVal - 52) / (65 - 52);
+      setMagmaTemp(Math.round(1000 - ratio * 200)); // 1000°C to 800°C
+    } else {
+      setViscosity('rhyolitic');
+      const ratio = (silicaVal - 65) / (75 - 65);
+      setMagmaTemp(Math.round(800 - ratio * 150)); // 800°C to 650°C
+    }
+    setSimResult(null);
+  }, [silicaVal]);
+
+  // Sync pressureVal with pressure categories
+  useEffect(() => {
+    if (pressureVal < 50) {
+      setPressure('low');
+    } else if (pressureVal < 110) {
+      setPressure('medium');
+    } else {
+      setPressure('extreme');
+    }
+    setSimResult(null);
+  }, [pressureVal]);
 
   // Meaningful state variables for Page A (Map) & Page B (Animation)
   const [meaningfulPage, setMeaningfulPage] = useState<'A' | 'B'>('A');
@@ -80,69 +112,25 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
     return () => clearInterval(interval);
   }, [isPlayingAnimation, currentPage, meaningfulPage]);
 
-  // Mitigasi states
-  interface MitigationItem {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-    explanation: string;
-  }
-
-  const [initialMitigationItems] = useState<MitigationItem[]>([
-    { 
-      id: '1', 
-      text: "Mempersiapkan tas siaga bencana berisi masker, makanan kering, & air bersih", 
-      isCorrect: true, 
-      explanation: "Pertahanan pertama saat mengungsi cepat, menjamin hidrasi & nutrisi dasar serta perlindungan pernapasan." 
-    },
-    { 
-      id: '2', 
-      text: "Mendekati tepian Danau Toba untuk berselfie setelah terdengar sirine getaran keras", 
-      isCorrect: false, 
-      explanation: "Sangat berbahaya! Longsor tebing bawah air danau akibat gempa vulkanik berisiko menimbulkan gelombang tsunami." 
-    },
-    { 
-      id: '3', 
-      text: "Membersihkan tumpukan abu tebal di atap rumah saat letusan masih aktif tanpa pelindung", 
-      isCorrect: false, 
-      explanation: "Hindari! Abu vulkanik bersifat korosif & tajam, membahayakan mata/paru-paru jika terhirup langsung." 
-    },
-    { 
-      id: '4', 
-      text: "Menutup rapat celah ventilasi, jendela, & pintu menggunakan kain basah", 
-      isCorrect: true, 
-      explanation: "Kain basah sangat efektif menyaring aerosol abu vulkanik berbahaya agar tidak masuk mencemari sirkulasi dalam rumah." 
-    },
-    { 
-      id: '5', 
-      text: "Bergegas mengungsi ke titik evakuasi yang ditentukan PVMBG/BNPB", 
-      isCorrect: true, 
-      explanation: "Evakuasi terstruktur ke zona aman meminimalisir risiko jatuhnya korban akibat awan panas (wedhus gembel)." 
-    }
-  ]);
-
-  const [mitigationLeft, setMitigationLeft] = useState<MitigationItem[]>(() => {
-    const saved = localStorage.getItem('toba_mitigation_left');
-    return saved ? JSON.parse(saved) : initialMitigationItems;
-  });
-  const [mitigationCorrectZone, setMitigationCorrectZone] = useState<MitigationItem[]>(() => {
-    const saved = localStorage.getItem('toba_mitigation_correct');
+  // --- New Mitigasi Hujan Abu & Pilihan Alat Pelindung states ---
+  const [selectedEquipments, setSelectedEquipments] = useState<string[]>(() => {
+    const saved = localStorage.getItem('toba_selected_equipments');
     return saved ? JSON.parse(saved) : [];
   });
-  const [mitigationAvoidZone, setMitigationAvoidZone] = useState<MitigationItem[]>(() => {
-    const saved = localStorage.getItem('toba_mitigation_avoid');
-    return saved ? JSON.parse(saved) : [];
+  const [activeEvacTab, setActiveEvacTab] = useState<'sinabung' | 'sibayak'>('sinabung');
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(() => {
+    return localStorage.getItem('toba_mitigation_submitted') === 'true';
   });
-  const [showFeedback, setShowFeedback] = useState<boolean>(() => {
-    return localStorage.getItem('toba_mitigation_show_feedback') === 'true';
+  const [hasEarnedBadge, setHasEarnedBadge] = useState<boolean>(() => {
+    return localStorage.getItem('toba_mitigation_earned_badge') === 'true';
   });
+  const [mitigasiTab, setMitigasiTab] = useState<'challenge' | 'evac'>('challenge');
 
   useEffect(() => {
-    localStorage.setItem('toba_mitigation_left', JSON.stringify(mitigationLeft));
-    localStorage.setItem('toba_mitigation_correct', JSON.stringify(mitigationCorrectZone));
-    localStorage.setItem('toba_mitigation_avoid', JSON.stringify(mitigationAvoidZone));
-    localStorage.setItem('toba_mitigation_show_feedback', showFeedback.toString());
-  }, [mitigationLeft, mitigationCorrectZone, mitigationAvoidZone, showFeedback]);
+    localStorage.setItem('toba_selected_equipments', JSON.stringify(selectedEquipments));
+    localStorage.setItem('toba_mitigation_submitted', isSubmitted.toString());
+    localStorage.setItem('toba_mitigation_earned_badge', hasEarnedBadge.toString());
+  }, [selectedEquipments, isSubmitted, hasEarnedBadge]);
 
   // Audio References
   const audioRefs = useRef({
@@ -209,38 +197,44 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
 
   const specs = getMagmaSpecs();
 
-  const handleMitigationSelect = (item: MitigationItem, target: 'benar' | 'salah') => {
+  const handleEquipmentToggle = (id: string) => {
+    if (isSubmitted) return; // Cannot toggle after submitting unless reset
     playSound('knock');
-    setMitigationLeft(prev => prev.filter(i => i.id !== item.id));
-    if (target === 'benar') {
-      setMitigationCorrectZone(prev => [...prev, item]);
+    const alreadyHas = selectedEquipments.includes(id);
+    if (alreadyHas) {
+      setSelectedEquipments(prev => prev.filter(item => item !== id));
     } else {
-      setMitigationAvoidZone(prev => [...prev, item]);
+      setSelectedEquipments(prev => [...prev, id]);
+    }
+  };
+
+  const handleSubmitMitigation = () => {
+    if (selectedEquipments.length === 0) {
+      playSound('knock');
+      return;
+    }
+    
+    setIsSubmitted(true);
+    
+    // Correct combo is having 'mask' and 'goggles' but NOT 'hands'
+    const isCorrect = selectedEquipments.includes('mask') && 
+                      selectedEquipments.includes('goggles') && 
+                      !selectedEquipments.includes('hands');
+                      
+    if (isCorrect) {
+      playSound('success');
+      setHasEarnedBadge(true);
+    } else {
+      playSound('failure');
+      setHasEarnedBadge(false);
     }
   };
 
   const handleResetMitigation = () => {
     playSound('knock');
-    setMitigationLeft(initialMitigationItems);
-    setMitigationCorrectZone([]);
-    setMitigationAvoidZone([]);
-    setShowFeedback(false);
-  };
-
-  const checkMitigationAnswers = () => {
-    const isAllPlaced = mitigationLeft.length === 0;
-    if (!isAllPlaced) return;
-
-    setShowFeedback(true);
-    const hasError = 
-      mitigationCorrectZone.some(item => !item.isCorrect) || 
-      mitigationAvoidZone.some(item => item.isCorrect);
-
-    if (hasError) {
-      playSound('failure');
-    } else {
-      playSound('success');
-    }
+    setSelectedEquipments([]);
+    setIsSubmitted(false);
+    setHasEarnedBadge(false);
   };
 
   const navItems = [
@@ -747,55 +741,60 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
             </div>
 
             {/* Sliders container */}
-            <div className="w-full space-y-5 bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-md">
-              <div className="space-y-1">
+            <div className="w-full space-y-6 bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-md">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-stone-500">
-                  <span>1. Viskositas Magma (Silika)</span>
-                  <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">{viscosity.toUpperCase()}</span>
+                  <span>1. Viskositas Magma (SiO₂: Kandungan Silika)</span>
+                  <span className="text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full font-extrabold font-mono">
+                    {silicaVal}% - {viscosity === 'basaltic' ? 'Basalt (Cair)' : viscosity === 'andesitic' ? 'Andesit' : 'Riolit (Kental / Toba)'}
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {['basaltic', 'andesitic', 'rhyolitic'].map((v) => (
-                    <button
-                      key={v}
-                      disabled={isSimulating}
-                      onClick={() => {
-                        setViscosity(v as any);
-                        setMagmaTemp(v === 'basaltic' ? 1100 : v === 'andesitic' ? 900 : 750);
-                        setSimResult(null);
-                        playSound('knock');
-                      }}
-                      className={`py-2 p-1.5 rounded-2xl border text-[9px] font-black uppercase transition-all ${
-                        viscosity === v ? 'bg-orange-600 border-orange-600 text-white shadow-sm' : 'bg-stone-50 border-stone-200 text-stone-400'
-                      }`}
-                    >
-                      {v === 'basaltic' ? 'Basalt (Cair)' : v === 'andesitic' ? 'Andesit' : 'Riolit (Kental)'}
-                    </button>
-                  ))}
+                <div className="relative pt-1">
+                  <input
+                    type="range"
+                    min="45"
+                    max="75"
+                    step="1"
+                    disabled={isSimulating}
+                    value={silicaVal}
+                    onChange={(e) => {
+                      setSilicaVal(Number(e.target.value));
+                    }}
+                    className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-orange-600 border border-stone-200"
+                  />
+                  <div className="flex justify-between text-[8px] font-black text-stone-400 mt-1 px-1">
+                    <span>45% (Cair)</span>
+                    <span>60% (Sedang)</span>
+                    <span>75% (Kental)</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-stone-500">
                   <span>2. Tekanan Gas Tektonik</span>
-                  <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{pressure.toUpperCase()}</span>
+                  <span className="text-red-500 bg-red-50 px-2.5 py-0.5 rounded-full font-extrabold font-mono">
+                    {pressureVal} MPa - {pressure === 'low' ? 'Rendah' : pressure === 'medium' ? 'Sedang' : 'Ekstrem'}
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {['low', 'medium', 'extreme'].map((p) => (
-                    <button
-                      key={p}
-                      disabled={isSimulating}
-                      onClick={() => {
-                        setPressure(p as any);
-                        setSimResult(null);
-                        playSound('knock');
-                      }}
-                      className={`py-2 p-1.5 rounded-2xl border text-[9px] font-black uppercase transition-all ${
-                        pressure === p ? 'bg-red-500 border-red-500 text-white shadow-sm' : 'bg-stone-50 border-stone-200 text-stone-400'
-                      }`}
-                    >
-                      {p === 'low' ? 'Rendah' : p === 'medium' ? 'Sedang' : 'Ekstrem'}
-                    </button>
-                  ))}
+                <div className="relative pt-1">
+                  <input
+                    type="range"
+                    min="10"
+                    max="150"
+                    step="5"
+                    disabled={isSimulating}
+                    value={pressureVal}
+                    onChange={(e) => {
+                      setPressureVal(Number(e.target.value));
+                    }}
+                    className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-red-500 border border-stone-200"
+                  />
+                  <div className="flex justify-between text-[8px] font-black text-stone-400 mt-1 px-1">
+                    <span>10 MPa (Rendah)</span>
+                    <span>80 MPa (Sedang)</span>
+                    <span>150 MPa (Ekstrem)</span>
+                  </div>
                 </div>
               </div>
 
@@ -822,45 +821,460 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
 
             {/* Simulated Stage Visual element */}
             <div className="relative w-full aspect-[4/3] bg-stone-900 rounded-[36px] overflow-hidden shadow-2xl border-2 border-white flex flex-col justify-end">
-              <svg viewBox="0 0 300 220" className="w-full h-full">
-                <AnimatePresence>
-                  {isSimulating && (
-                    <motion.g
-                      initial={{ opacity: 0, scale: 0.2 }}
-                      animate={{ opacity: [0.8, 1, 0.8], scale: [0.8, 2.5, 3] }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 2.8, ease: "easeOut" }}
-                      className="origin-[150px_110px]"
-                    >
-                      <circle cx="150" cy="100" r="15" fill="#ef4444" opacity="0.8" className="blur-[2px]" />
-                      <circle cx="130" cy="80" r="20" fill="#f97316" opacity="0.6" className="blur-[4px]" />
-                      <circle cx="170" cy="75" r="22" fill="#78716c" opacity="0.4" className="blur-[6px]" />
-                    </motion.g>
-                  )}
-                </AnimatePresence>
+              <style>{`
+                @keyframes smokePuff {
+                  0% {
+                    transform: translate(-50%, -50%) scale(0.3) translateY(0);
+                    opacity: 0;
+                  }
+                  15% {
+                    opacity: var(--puff-max-op, 0.6);
+                  }
+                  100% {
+                    transform: translate(calc(-50% + var(--puff-drift-x, 15px)), -50%) scale(var(--puff-end-scale, 2.5)) translateY(var(--puff-rise-y, -100px));
+                    opacity: 0;
+                  }
+                }
+                @keyframes fireEmber {
+                  0% {
+                    transform: translate(-50%, -50%) scale(0.5) translateY(0);
+                    opacity: 1;
+                  }
+                  100% {
+                    transform: translate(calc(-50% + var(--ember-x, 30px)), -50%) scale(0.1) translateY(var(--ember-y, -140px));
+                    opacity: 0;
+                  }
+                }
+                @keyframes volcanicLightning {
+                  0%, 90%, 94%, 98%, 100% { opacity: 0; }
+                  92%, 96% { opacity: 0.8; }
+                }
+                @keyframes lavaFlow {
+                  0%, 100% { opacity: 0.6; filter: brightness(1.0); }
+                  50% { opacity: 0.9; filter: brightness(1.3); }
+                }
+              `}</style>
 
-                <motion.g animate={simResult === 'super-eruption' ? { y: 20 } : { y: 0 }}>
+              {/* 1. Base Mountain Background with live vibration scale */}
+              {simResult !== 'super-eruption' && (
+                <img 
+                  src="/gunungtoba.png" 
+                  alt="Gunung Toba Purba" 
+                  className={`absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-100 ${
+                    isSimulating 
+                      ? 'animate-earthquake scale-105' 
+                      : ''
+                  }`}
+                  style={!isSimulating ? {
+                    transform: `translate(${(Math.sin(Date.now() / 40) * (pressureVal > 110 ? 1.0 : pressureVal > 60 ? 0.4 : 0))}px, ${(Math.cos(Date.now() / 40) * (pressureVal > 110 ? 1.0 : pressureVal > 60 ? 0.4 : 0))}px) scale(${1 + (pressureVal / 1500)})`
+                  } : undefined}
+                  referrerPolicy="no-referrer"
+                />
+              )}
+
+              {/* 2. Magma core glow inside the crater (y: 41%, x: 50%) */}
+              {simResult !== 'super-eruption' && !isSimulating && (
+                <div 
+                  className="absolute rounded-full filter blur-[4px] pointer-events-none z-10 transition-all duration-300"
+                  style={{
+                    top: '41.5%',
+                    left: '50%',
+                    width: `${24 + (pressureVal / 6)}px`,
+                    height: `${12 + (pressureVal / 11)}px`,
+                    transform: 'translate(-50%, -50%)',
+                    background: 'radial-gradient(circle, rgba(239,68,68,1) 0%, rgba(249,115,22,0.8) 50%, rgba(239,68,68,0) 100%)',
+                    opacity: (pressureVal / 150) * 0.9 + (silicaVal / 75) * 0.1,
+                    mixBlendMode: 'screen',
+                    animation: `lavaFlow ${2 - (pressureVal / 100)}s infinite ease-in-out`
+                  }}
+                />
+              )}
+
+              {/* 3. Interactive Smoke/Ash Clouds on slider movement */}
+              {simResult !== 'super-eruption' && !isSimulating && (
+                <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+                  {/* Cloud 1 - Center Main */}
+                  <div 
+                    className="absolute rounded-full filter blur-[5px]"
+                    style={{
+                      top: '41%',
+                      left: '50%',
+                      width: `${20 + (pressureVal / 4)}px`,
+                      height: `${16 + (pressureVal / 5)}px`,
+                      backgroundColor: silicaVal > 65 ? '#292524' : silicaVal > 52 ? '#78716c' : '#e5e5e0',
+                      '--puff-max-op': silicaVal > 65 ? '0.85' : silicaVal > 52 ? '0.7' : '0.5',
+                      '--puff-drift-x': `${-12 + (pressureVal / 8)}px`,
+                      '--puff-rise-y': `-${50 + (pressureVal * 0.6)}px`,
+                      '--puff-end-scale': `${2.0 + (pressureVal / 60)}`,
+                      animation: `smokePuff ${Math.max(1.2, 4.0 - (pressureVal / 40))}s infinite linear`
+                    } as any}
+                  />
+
+                  {/* Cloud 2 - Center Left-leaning delay */}
+                  <div 
+                    className="absolute rounded-full filter blur-[6px]"
+                    style={{
+                      top: '41%',
+                      left: '49%',
+                      width: `${16 + (pressureVal / 5)}px`,
+                      height: `${14 + (pressureVal / 6)}px`,
+                      backgroundColor: silicaVal > 65 ? '#1c1917' : silicaVal > 52 ? '#57534e' : '#f5f5f4',
+                      '--puff-max-op': silicaVal > 65 ? '0.8' : silicaVal > 52 ? '0.6' : '0.4',
+                      '--puff-drift-x': `-${15 + (pressureVal / 6)}px`,
+                      '--puff-rise-y': `-${65 + (pressureVal * 0.7)}px`,
+                      '--puff-end-scale': `${2.4 + (pressureVal / 50)}`,
+                      animation: `smokePuff ${Math.max(1.0, 3.5 - (pressureVal / 40))}s infinite linear`,
+                      animationDelay: '1.2s'
+                    } as any}
+                  />
+
+                  {/* Cloud 3 - Center Right-leaning delay */}
+                  <div 
+                    className="absolute rounded-full filter blur-[7px]"
+                    style={{
+                      top: '41.5%',
+                      left: '51%',
+                      width: `${18 + (pressureVal / 5)}px`,
+                      height: `${15 + (pressureVal / 6)}px`,
+                      backgroundColor: silicaVal > 65 ? '#44403c' : silicaVal > 52 ? '#6b7280' : '#e5e7eb',
+                      '--puff-max-op': silicaVal > 65 ? '0.9' : silicaVal > 52 ? '0.65' : '0.45',
+                      '--puff-drift-x': `${18 + (pressureVal / 7)}px`,
+                      '--puff-rise-y': `-${55 + (pressureVal * 0.55)}px`,
+                      '--puff-end-scale': `${2.2 + (pressureVal / 55)}`,
+                      animation: `smokePuff ${Math.max(1.1, 3.8 - (pressureVal / 40))}s infinite linear`,
+                      animationDelay: '2.4s'
+                    } as any}
+                  />
+
+                  {/* Left Side Fumarole (steam vent) */}
+                  <div 
+                    className="absolute bg-stone-100/40 rounded-full filter blur-[4px]"
+                    style={{
+                      top: '46.5%',
+                      left: '38%',
+                      width: '10px',
+                      height: '8px',
+                      '--puff-max-op': '0.35',
+                      '--puff-drift-x': '-8px',
+                      '--puff-rise-y': '-35px',
+                      '--puff-end-scale': '1.8',
+                      animation: 'smokePuff 2.5s infinite linear'
+                    } as any}
+                  />
+
+                  {/* Right Side Fumarole */}
+                  <div 
+                    className="absolute bg-stone-200/50 rounded-full filter blur-[4px]"
+                    style={{
+                      top: '44.5%',
+                      left: '62%',
+                      width: '12px',
+                      height: '9px',
+                      '--puff-max-op': '0.4',
+                      '--puff-drift-x': '10px',
+                      '--puff-rise-y': '-40px',
+                      '--puff-end-scale': '2.0',
+                      animation: 'smokePuff 2.2s infinite linear',
+                      animationDelay: '0.6s'
+                    } as any}
+                  />
+
+                  {/* Sparks/Embers if pressure is extreme */}
+                  {pressureVal > 90 && (
+                    <>
+                      <div 
+                        className="absolute bg-amber-400 rounded-full shadow-[0_0_8px_#f59e0b] filter blur-[0.5px]"
+                        style={{
+                          top: '41%',
+                          left: '50%',
+                          width: '4px',
+                          height: '4px',
+                          '--ember-x': '-25px',
+                          '--ember-y': '-110px',
+                          animation: 'fireEmber 1.2s infinite ease-out'
+                        } as any}
+                      />
+                      <div 
+                        className="absolute bg-orange-500 rounded-full shadow-[0_0_8px_#ef4444] filter blur-[0.5px]"
+                        style={{
+                          top: '41%',
+                          left: '50.5%',
+                          width: '3px',
+                          height: '3px',
+                          '--ember-x': '20px',
+                          '--ember-y': '-130px',
+                          animation: 'fireEmber 0.9s infinite ease-out',
+                          animationDelay: '0.3s'
+                        } as any}
+                      />
+                      <div 
+                        className="absolute bg-yellow-300 rounded-full shadow-[0_0_8px_#fbbf24] filter blur-[0.5px]"
+                        style={{
+                          top: '41%',
+                          left: '49.5%',
+                          width: '5px',
+                          height: '5px',
+                          '--ember-x': '5px',
+                          '--ember-y': '-150px',
+                          animation: 'fireEmber 1.5s infinite ease-out',
+                          animationDelay: '0.6s'
+                        } as any}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* 4. Active Eruption Cinematic Visualizer when simulating */}
+              {isSimulating && (
+                <div className="absolute inset-0 z-20 pointer-events-none bg-black/10 select-none overflow-hiddenAll">
+                  {/* Lightning flash (intermittent dramatic effect) */}
+                  <div className="absolute inset-0 bg-white/70 z-30 pointer-events-none" style={{ animation: 'volcanicLightning 1.5s infinite' }} />
+
+                  {/* Gushing central lava column */}
+                  <motion.div 
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: [1, 1.1, 1], opacity: [0.8, 1, 0.9] }}
+                    className="absolute bg-gradient-to-t from-red-600 via-orange-500 to-yellow-400 blur-[2px] origin-bottom"
+                    style={{
+                      left: '48.5%',
+                      width: '3%',
+                      height: '35%',
+                      bottom: '58%'
+                    }}
+                  />
+
+                  {/* Explosive Ash plumes rising rapidly */}
+                  <motion.div
+                    initial={{ y: 0, x: -10, scale: 0.1, opacity: 0 }}
+                    animate={{ 
+                      y: [-10, -180], 
+                      x: [-10, -50, -80],
+                      scale: [0.2, 3.2, 5.0],
+                      opacity: [0.9, 1, 0] 
+                    }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                    className="absolute bg-neutral-900 rounded-full filter blur-[10px]"
+                    style={{ left: '50%', top: '41%', width: '40px', height: '35px' }}
+                  />
+                  <motion.div
+                    initial={{ y: 0, x: 10, scale: 0.1, opacity: 0 }}
+                    animate={{ 
+                      y: [-12, -190], 
+                      x: [10, 60, 90],
+                      scale: [0.2, 2.9, 4.6],
+                      opacity: [0.9, 1, 0] 
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+                    className="absolute bg-stone-805 rounded-full filter blur-[12px]"
+                    style={{ left: '50%', top: '41%', width: '45px', height: '40px' }}
+                  />
+                  <motion.div
+                    initial={{ y: -5, x: 0, scale: 0.1, opacity: 0 }}
+                    animate={{ 
+                      y: [-5, -200], 
+                      x: [0, -10, 20],
+                      scale: [0.3, 3.5, 6.0],
+                      opacity: [1, 1, 0] 
+                    }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut", delay: 0.2 }}
+                    className="absolute bg-stone-950 rounded-full filter blur-[15px]"
+                    style={{ left: '50%', top: '41%', width: '35px', height: '30px' }}
+                  />
+
+                  {/* Fiery lava splashes emitting from crater */}
+                  {Array.from({ length: 8 }).map((_, i) => {
+                    const angle = -45 - (i * 12); // outward angles
+                    const rad = angle * (Math.PI / 180);
+                    const tx = Math.cos(rad) * 120;
+                    const ty = Math.sin(rad) * 140;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                        animate={{ 
+                          x: tx, 
+                          y: ty, 
+                          scale: 0.1, 
+                          opacity: [1, 1, 0] 
+                        }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeOut" }}
+                        className="absolute rounded-full bg-gradient-to-br from-yellow-400 to-red-600 shadow-[0_0_10px_#ef4444]"
+                        style={{
+                          top: '41%',
+                          left: '50%',
+                          width: '6px',
+                          height: '6px',
+                        }}
+                      />
+                    );
+                  })}
+                  
+                  {/* Smoke and red overlay ring shockwave */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0.9 }}
+                    animate={{ scale: 3.5, opacity: 0 }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
+                    className="absolute border-4 border-orange-500 rounded-full filter blur-[2px]"
+                    style={{
+                      top: '41%',
+                      left: '50%',
+                      width: '60px',
+                      height: '35px',
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* 5. Post-Eruption States (Caldera Lake or Active Lava Flow) */}
+              {!isSimulating && simResult && (
+                <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between p-4 bg-black/40 backdrop-blur-[1px]">
+                  
+                  {/* Render Caldera Lake for Super-Erupsi */}
                   {simResult === 'super-eruption' ? (
-                    <>
-                      <path d="M 0 190 L 80 150 L 110 160 L 100 190 Z" fill="#451a03" stroke="#1c1917" strokeWidth="2" />
-                      <path d="M 300 190 L 220 150 L 190 160 L 200 190 Z" fill="#451a03" stroke="#1c1917" strokeWidth="2" />
-                      <rect x="90" y="155" width="120" height="35" rx="8" fill="#1d4ed8" opacity="0.85" />
-                      <path d="M 125 165 C 135 152, 165 152, 175 165 Z" fill="#b45309" stroke="#78350f" strokeWidth="1.5" />
-                      <text x="135" y="180" fill="yellow" className="font-sans font-black text-[9px]">DANAU TOBA</text>
-                    </>
-                  ) : (
-                    <>
-                      <ellipse cx="150" cy="180" rx="35" ry="20" fill={pressure === 'extreme' ? '#ef4444' : '#b45309'} className="animate-pulse" />
-                      <path d="M 150 180 L 150 110" stroke={pressure === 'extreme' ? '#ef4444' : '#b45309'} strokeWidth="5" />
-                      <path d="M 40 190 L 150 90 L 260 190 Z" fill="#57534e" stroke="#292524" strokeWidth="3" />
-                    </>
-                  )}
-                </motion.g>
-                <rect x="0" y="190" width="300" height="30" fill="#1c1917" />
-              </svg>
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute inset-0 bg-stone-900 flex flex-col justify-end p-5 overflow-hidden rounded-[34px] border border-white/20 pointer-events-auto"
+                    >
+                      {/* Crystalline Caldera Lake background simulation */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-sky-300 to-sky-600 opacity-90 z-0">
+                        {/* Shimmer/Water wave lines */}
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-300/40 via-sky-500/10 to-sky-700/60 mix-blend-overlay animate-pulse" />
+                      </div>
+                      
+                      {/* Samosir Island (Kubah Resurgent) rising at the center */}
+                      <motion.div 
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 1.0 }}
+                        className="absolute top-[40%] left-[30%] right-[30%] h-[32%] bg-emerald-700/90 rounded-[100%] border-b-8 border-stone-800 shadow-inner z-10 flex flex-col items-center justify-center border-t border-emerald-500/30"
+                      >
+                        {/* Dense lush forest textures */}
+                        <div className="absolute inset-4 rounded-full bg-emerald-800/80 filter blur-[3px]" />
+                        <span className="text-[7.5px] font-black tracking-widest text-[#fef08a] uppercase drop-shadow-md z-20">PULAU SAMOSIR</span>
+                        <span className="text-[5.5px] font-bold text-emerald-100 uppercase tracking-widest z-20">Resurgent Dome</span>
+                      </motion.div>
 
-              <div className="absolute top-4 left-4">
-                <span className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-white font-mono text-[8px] uppercase tracking-widest leading-none">
+                      {/* Surrounding steep caldera walls (tepi kaldera) */}
+                      <div className="absolute top-0 bottom-0 left-0 w-[18%] bg-stone-850/95 border-r-2 border-stone-700/30 skew-y-3 z-10 shadow-lg" />
+                      <div className="absolute top-0 bottom-0 right-0 w-[18%] bg-stone-850/95 border-l-2 border-stone-700/30 -skew-y-3 z-10 shadow-lg" />
+                      <div className="absolute bottom-0 left-0 right-0 h-[22%] bg-stone-900 border-t-2 border-stone-800 z-10 flex items-center justify-center px-4" />
+
+                      {/* Header title */}
+                      <div className="absolute top-3 inset-x-4 flex justify-between items-center z-20">
+                        <span className="text-[7.5px] font-black py-1 px-2.5 bg-sky-950/90 text-sky-300 border border-sky-500/30 rounded-full tracking-widest uppercase">
+                          🌋 TERBENTUK KALDERA BARU
+                        </span>
+                        <span className="text-[7px] font-bold font-mono text-white/70">100 KM x 30 KM</span>
+                      </div>
+
+                      {/* Floating slow clouds */}
+                      <div className="absolute top-8 left-[10%] w-24 h-6 bg-white/20 rounded-full filter blur-md animate-pulse animate-duration-5000" />
+                      <div className="absolute top-12 right-[12%] w-16 h-4 bg-white/25 rounded-full filter blur-sm" />
+
+                      {/* Explanatory Banner */}
+                      <div className="relative z-20 text-center space-y-1 mb-1 max-w-[240px] mx-auto bg-stone-950/85 backdrop-blur-md p-3 rounded-2xl border border-white/10 shadow-xl">
+                        <h4 className="text-[11px] font-black tracking-tight text-white uppercase italic">DANAU TOBA PURBA</h4>
+                        <p className="text-[7.5px] text-stone-300 font-semibold leading-normal">
+                          Super-erupsi memuntahkan magma riolit kental secara total. Atap dapur magma runtuh masif menciptakan danau vulkanik terdalam di dunia!
+                        </p>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    // Regular eruption finish states overlay details
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-x-3 bottom-3 bg-stone-950/95 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-center space-y-1 z-20"
+                    >
+                      <h4 className="text-[9.5px] font-black text-amber-400 uppercase tracking-wider">
+                        {simResult === 'gentle-effusive' && '💧 BASALTIC EFFUSIVE FLOW'}
+                        {simResult === 'explosive-plinian' && '☁️ TOWERING PLINIAN ERUPTION'}
+                        {simResult === 'moderate-strombolian' && '💥 STROMBOLIAN ERUPTION'}
+                      </h4>
+                      <p className="text-[7.5px] text-stone-300 font-semibold leading-normal">
+                        {simResult === 'gentle-effusive' && 'Magma basalt cair mengalir perlahan menuruni lereng tanpa letupan dahsyat. Gejala ini mirip pelepasan lava cair di pulau perisai Hawaii.'}
+                        {simResult === 'explosive-plinian' && 'Letusan eksplosif gas tinggi meluncurkan abu pekat stratosfer. Kubah gunung tergerus secara parsial namun sistem kaldera belum runtuh.'}
+                        {simResult === 'moderate-strombolian' && 'Semburan kembang api lava berkala melontarkan material piroklastik kecil di sekitar lubang kepundan. Energi gas terdisipasi aman.'}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {/* Visual Flows Overlay for Gentle Effusive (lava flows) */}
+                  {simResult === 'gentle-effusive' && (
+                    <div className="absolute inset-0 pointer-events-none z-10 opacity-70">
+                      <svg viewBox="0 0 300 220" className="w-full h-full">
+                        {/* Lava river 1 */}
+                        <path 
+                          d="M 150 93 Q 140 120 132 150 T 130 190" 
+                          fill="none" 
+                          stroke="#ea580c" 
+                          strokeWidth="3.5" 
+                          strokeLinecap="round"
+                          style={{ animation: 'lavaFlow 1.8s infinite' }}
+                        />
+                        <path 
+                          d="M 150 93 Q 140 120 132 150 T 130 190" 
+                          fill="none" 
+                          stroke="#f1a80a" 
+                          strokeWidth="1.5" 
+                          strokeLinecap="round"
+                        />
+
+                        {/* Lava river 2 */}
+                        <path 
+                          d="M 152 93 Q 165 130 178 160 T 185 190" 
+                          fill="none" 
+                          stroke="#ef4444" 
+                          strokeWidth="4" 
+                          strokeLinecap="round"
+                          style={{ animation: 'lavaFlow 2.3s infinite' }}
+                        />
+                        <path 
+                          d="M 152 93 Q 165 130 178 160 T 185 190" 
+                          fill="none" 
+                          stroke="#ea580c" 
+                          strokeWidth="1.8" 
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Volumetric high column for explosive Plinian */}
+                  {simResult === 'explosive-plinian' && (
+                    <div className="absolute inset-0 pointer-events-none z-10 mix-blend-screen opacity-80">
+                      <svg viewBox="0 0 300 220" className="w-full h-full">
+                        {/* Tall gray column expanding at top */}
+                        <ellipse cx="150" cy="40" rx="45" ry="16" fill="#78716c" opacity="0.8" className="blur-[4px]" />
+                        <ellipse cx="150" cy="50" rx="35" ry="12" fill="#57534e" opacity="0.9" className="blur-[2px]" />
+                        <path d="M 142 90 L 120 40 L 180 40 L 158 90 Z" fill="#57534e" opacity="0.8" className="blur-[3px]" />
+                        {/* Ash glow at bottom of column */}
+                        <ellipse cx="150" cy="91" rx="10" ry="4" fill="#f97316" className="blur-[1px]" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Spark splatter for moderate strombolian */}
+                  {simResult === 'moderate-strombolian' && (
+                    <div className="absolute inset-0 pointer-events-none z-10">
+                      <svg viewBox="0 0 300 220" className="w-full h-full">
+                        <circle cx="150" cy="91" r="5" fill="#f97316" className="animate-ping" />
+                        <circle cx="145" cy="85" r="1.5" fill="#ef4444" />
+                        <circle cx="157" cy="81" r="2" fill="#f59e0b" />
+                        <circle cx="138" cy="88" r="1" fill="#f59e0b" />
+                        <circle cx="152" cy="74" r="1" fill="#ef4444" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Status Header pill */}
+              <div className="absolute top-4 left-4 z-40">
+                <span className="px-2.5 py-1 bg-black/75 backdrop-blur-md rounded-full text-white font-mono text-[8px] uppercase tracking-widest leading-none border border-white/10 shadow-lg">
                   {isSimulating ? 'ERUPSI AKTIF...' : simResult ? 'SIMULASI SELESAI' : 'SIAP DIUJI'}
                 </span>
               </div>
@@ -879,42 +1293,102 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
               )}
             </button>
 
-            {/* Results feedback popup card */}
+            {/* Results feedback popup modal */}
             <AnimatePresence>
               {simResult && !isSimulating && (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 20, opacity: 0 }}
-                  className="w-full bg-white p-5 rounded-[32px] border-4 border-stone-200 shadow-xl space-y-3 text-left"
-                >
-                  <div className="flex gap-3 items-center border-b border-stone-100 pb-2">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-orange-100 text-orange-600">
-                      <AlertTriangle size={24} />
-                    </div>
-                    <div>
-                      <span className="text-[8px] font-black tracking-widest text-stone-400">HASIL SIMULASI FISIKA</span>
-                      <h4 className="text-base font-black italic uppercase leading-none tracking-tight text-stone-850">
-                        {simResult === 'super-eruption' && 'Super-Erupsi Kaldera Toba!'}
-                        {simResult === 'gentle-effusive' && 'Aliran Lava Tenang'}
-                        {simResult === 'explosive-plinian' && 'Erupsi Eksplosif Plinian'}
-                        {simResult === 'moderate-strombolian' && 'Eruption Moderate'}
-                      </h4>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold leading-relaxed text-stone-600">
-                    {simResult === 'super-eruption' && 'Luar Biasa! Silika kental Riolit menyumbat pelepasan gelembung gas bertemu tekanan tektonik ekstrem memicu runtuhnya dapur magma, membentuk Danau Toba yang megah! Anda memecahkan rekor Geologi.'}
-                    {simResult === 'gentle-effusive' && 'Magma basaltik yang cair meleleh dengan tenang menghasilkan lava tipis mirip gunung berapi di Hawaii. Tidak menghasilkan letusan pembentuk Toba.'}
-                    {simResult === 'explosive-plinian' && 'Tekanan tinggi meluncurkan abu tebal tinggi ke stratosfer namun tidak sekuat erupsi katastrofe pembentuk cekungan dangkalan kaldera.'}
-                    {simResult === 'moderate-strombolian' && 'Semburan kembang api vulkanik skala kecil. Gas berhasil bocor secara perlahan sehingga tidak memicu akumulasi energi mematikan.'}
-                  </p>
-                  <button 
-                    onClick={() => { setSimResult(null); playSound('knock'); }}
-                    className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 font-extrabold text-[10px] uppercase rounded-xl transition-colors"
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md">
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="w-full max-w-md bg-white p-6 rounded-[36px] border-4 border-stone-200 shadow-2xl space-y-4 text-left relative overflow-hidden"
                   >
-                    Atur Ulang Parameter
-                  </button>
-                </motion.div>
+                    {/* Decorative Top Accent bar based on Eruption type */}
+                    <div 
+                      className={`absolute top-0 inset-x-0 h-4 ${
+                        simResult === 'super-eruption' 
+                          ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' 
+                          : simResult === 'explosive-plinian' 
+                          ? 'bg-stone-500' 
+                          : simResult === 'gentle-effusive' 
+                          ? 'bg-orange-500' 
+                          : 'bg-yellow-500'
+                      }`}
+                    />
+
+                    {/* Close button */}
+                    <button
+                      onClick={() => { setSimResult(null); playSound('knock'); }}
+                      className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 font-black rounded-full hover:bg-stone-100 transition-colors text-xs"
+                      aria-label="Tutup"
+                    >
+                      ✕
+                    </button>
+
+                    <div className="flex gap-4 items-start pt-2">
+                      <div className={`w-14 h-14 rounded-3xl flex items-center justify-center shrink-0 border-2 ${
+                        simResult === 'super-eruption' 
+                          ? 'bg-red-50 text-red-650 border-red-200 shadow-md'
+                          : simResult === 'explosive-plinian'
+                          ? 'bg-stone-50 text-stone-650 border-stone-200 shadow-sm'
+                          : simResult === 'gentle-effusive'
+                          ? 'bg-orange-50 text-orange-650 border-orange-200 shadow-sm'
+                          : 'bg-yellow-50 text-yellow-600 border-yellow-250 shadow-sm'
+                      }`}>
+                        {simResult === 'super-eruption' ? (
+                          <span className="text-3xl">🌋</span>
+                        ) : simResult === 'explosive-plinian' ? (
+                          <span className="text-3xl">☁️</span>
+                        ) : simResult === 'gentle-effusive' ? (
+                          <span className="text-3xl">💧</span>
+                        ) : (
+                          <span className="text-3xl">💥</span>
+                        )}
+                      </div>
+                      <div className="space-y-1 pr-4">
+                        <span className="text-[8px] font-black tracking-widest text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full uppercase">
+                          HASIL SIMULASI FISIKA TOBA
+                        </span>
+                        <h4 className="text-lg font-black italic uppercase leading-none tracking-tight text-stone-900 pt-0.5">
+                          {simResult === 'super-eruption' && 'Super-Erupsi Kaldera Toba!'}
+                          {simResult === 'gentle-effusive' && 'Aliran Lava Tenang'}
+                          {simResult === 'explosive-plinian' && 'Erupsi Eksplosif Plinian'}
+                          {simResult === 'moderate-strombolian' && 'Eruption Moderate'}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-50 p-4 rounded-3xl border border-stone-150 space-y-2">
+                      <h5 className="text-[9px] font-black uppercase text-stone-400 tracking-widest leading-none">Penjelasan Sains:</h5>
+                      <p className="text-xs font-bold leading-relaxed text-stone-700">
+                        {simResult === 'super-eruption' && 'Luar Biasa! Silika kental Riolit menyumbat pelepasan gelembung gas bertemu tekanan tektonik ekstrem memicu runtuhnya dapur magma, membentuk Danau Toba yang megah! Anda memecahkan rekor Geologi.'}
+                        {simResult === 'gentle-effusive' && 'Magma basaltik yang cair meleleh dengan tenang menghasilkan lava tipis mirip gunung berapi di Hawaii. Tidak menghasilkan letusan pembentuk Toba.'}
+                        {simResult === 'explosive-plinian' && 'Tekanan tinggi meluncurkan abu tebal tinggi ke stratosfer namun tidak sekuat erupsi katastrofe pembentuk cekungan dangkalan kaldera.'}
+                        {simResult === 'moderate-strombolian' && 'Semburan kembang api vulkanik skala kecil. Gas berhasil bocor secara perlahan sehingga tidak memicu akumulasi energi mematikan.'}
+                      </p>
+                    </div>
+
+                    {/* Interactive Parameter Summary badges */}
+                    <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-stone-500 font-mono">
+                      <div className="bg-stone-50 px-3 py-2 rounded-2xl border border-stone-200">
+                        <span className="text-[8px] text-stone-400">KANDUNGAN SILIKA:</span>
+                        <span className="block font-black text-stone-850">{silicaVal}% ({viscosity.toUpperCase()})</span>
+                      </div>
+                      <div className="bg-stone-100/60 px-3 py-2 rounded-2xl border border-stone-200">
+                        <span className="text-[8px] text-stone-400">TEKANAN GAS:</span>
+                        <span className="block font-black text-stone-850">{pressureVal} MPa ({pressure.toUpperCase()})</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => { setSimResult(null); playSound('knock'); }}
+                      className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md active:scale-[0.98] mt-2 block text-center"
+                    >
+                      Ulangi / Atur Ulang Parameter
+                    </button>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </motion.div>
@@ -927,128 +1401,337 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 pb-20 text-left"
+            className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-5 pb-20 text-left"
           >
-            <div className="space-y-1">
-              <span className="px-3 py-1 bg-red-100 text-red-700 text-[9px] font-black rounded-full uppercase tracking-widest">AKSI MITIGASI VOLKANIK</span>
-              <h2 className="text-3xl font-black text-stone-900 tracking-tighter uppercase italic">Sikap Siaga Bencana</h2>
-              <p className="text-[10px] text-stone-500 font-bold max-w-xs uppercase tracking-wide leading-tight">Uji ketangguhan memisahkan aksi penyelamatan & pencegahan krisis!</p>
+            {/* Header info */}
+            <div className="space-y-1 text-center">
+              <span className="px-3 py-1 bg-red-100 text-red-700 text-[9px] font-black rounded-full uppercase tracking-widest border border-red-250 inline-block">AKSI MITIGASI VOLKANIK</span>
+              <h2 className="text-2xl font-black text-stone-900 tracking-tighter uppercase italic mt-1">Sikap Siaga Bencana</h2>
+              <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide leading-tight">Pelajari rute penyelamatan & latih kepatuhan alat keselamatan.</p>
             </div>
 
-            {/* Left/current action cards */}
-            {mitigationLeft.length > 0 ? (
-              <div className="space-y-4">
-                <p className="text-[9px] font-black uppercase text-stone-400 tracking-widest px-1">Pilahan Tindakan Selanjutnya:</p>
-                <motion.div 
-                  layout
-                  className="p-5 bg-white rounded-3xl border-2 border-stone-100 shadow-xl flex flex-col gap-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                      <ShieldAlert size={20} />
-                    </div>
-                    <span className="text-xs font-black text-stone-850 leading-tight">{mitigationLeft[0].text}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleMitigationSelect(mitigationLeft[0], 'benar')}
-                      className="flex flex-col items-center justify-center py-3 bg-green-50 hover:bg-green-100 text-green-600 rounded-2xl border border-green-200/50 transition-all active:scale-95"
-                    >
-                      <CheckCircle2 size={18} className="mb-1" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Perlu Dilakukan</span>
-                    </button>
-                    <button
-                      onClick={() => handleMitigationSelect(mitigationLeft[0], 'salah')}
-                      className="flex flex-col items-center justify-center py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl border border-red-200/50 transition-all active:scale-95"
-                    >
-                      <XCircle size={18} className="mb-1" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Harus Dihinari</span>
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            ) : (
-              <div className="p-6 bg-emerald-50 rounded-[32px] border-2 border-dashed border-emerald-200 text-center space-y-3">
-                <Check className="text-emerald-600 mx-auto" size={32} />
-                <h4 className="font-sans font-black text-emerald-800 uppercase text-xs">Seluruh Tindakan Telah Dipilah</h4>
-                <p className="text-[10px] text-stone-500 font-bold max-w-xs mx-auto">Klik tombol cek jawaban di bawah untuk menilai pemahaman mitigasi Anda.</p>
-              </div>
-            )}
-
-            {/* Split Sorting Zones */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Correct Zone */}
-              <div className="flex flex-col gap-2">
-                <div className="p-3 rounded-[24px] bg-green-100 text-green-700 text-center font-black uppercase italic tracking-tighter text-[9px] border border-green-200">
-                  Perlu Dilakukan
-                </div>
-                <div className="flex-1 min-h-[140px] p-2 bg-stone-50 border-2 border-dashed border-stone-200 rounded-[28px] flex flex-col gap-1.5">
-                  {mitigationCorrectZone.length === 0 ? (
-                    <span className="text-[8px] font-bold text-stone-400 uppercase text-center my-auto">KOSONG</span>
-                  ) : (
-                    mitigationCorrectZone.map(item => (
-                      <div 
-                        key={item.id} 
-                        className={`p-2 rounded-xl text-[9px] font-bold ${
-                          showFeedback 
-                            ? item.isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                            : 'bg-white border border-stone-100 text-stone-600'
-                        }`}
-                      >
-                        <p className="line-clamp-2 leading-none">{item.text}</p>
-                        {showFeedback && <p className="text-[7px] leading-tight mt-1 pt-1 border-t border-current/10 opacity-80 font-medium">{item.explanation}</p>}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Avoided Zone */}
-              <div className="flex flex-col gap-2">
-                <div className="p-3 rounded-[24px] bg-red-100 text-red-700 text-center font-black uppercase italic tracking-tighter text-[9px] border border-red-200">
-                  Harus Dihindari
-                </div>
-                <div className="flex-1 min-h-[140px] p-2 bg-stone-50 border-2 border-dashed border-stone-200 rounded-[28px] flex flex-col gap-1.5">
-                  {mitigationAvoidZone.length === 0 ? (
-                    <span className="text-[8px] font-bold text-stone-400 uppercase text-center my-auto">KOSONG</span>
-                  ) : (
-                    mitigationAvoidZone.map(item => (
-                      <div 
-                        key={item.id} 
-                        className={`p-2 rounded-xl text-[9px] font-bold ${
-                          showFeedback 
-                            ? !item.isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                            : 'bg-white border border-stone-100 text-stone-600'
-                        }`}
-                      >
-                        <p className="line-clamp-2 leading-none">{item.text}</p>
-                        {showFeedback && <p className="text-[7px] leading-tight mt-1 pt-1 border-t border-current/10 opacity-80 font-medium">{item.explanation}</p>}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="space-y-2">
-              {mitigationLeft.length === 0 && (
-                <button
-                  onClick={checkMitigationAnswers}
-                  className="w-full py-4 bg-stone-900 hover:bg-stone-850 text-white font-black text-xs uppercase tracking-widest rounded-[24px] shadow-md transition-transform"
-                >
-                  Evaluasi Jawaban Anda
-                </button>
-              )}
+            {/* Sub-tab Navigation inside Mitigasi */}
+            <div className="grid grid-cols-2 gap-1.5 bg-stone-100 p-1.5 rounded-2xl border border-stone-200">
               <button
-                onClick={handleResetMitigation}
-                className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-500 font-black text-[10px] uppercase tracking-wider rounded-[20px] transition-colors flex items-center justify-center gap-1.5"
+                onClick={() => {
+                  playSound('knock');
+                  setMitigasiTab('challenge');
+                }}
+                className={`py-2 px-1 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                  mitigasiTab === 'challenge'
+                    ? 'bg-stone-900 text-white shadow-md'
+                    : 'text-stone-500 hover:bg-stone-200/50'
+                }`}
               >
-                <RefreshCcw size={12} />
-                Atur Ulang Simulasi
+                🎮 Tantangan Siaga
+              </button>
+              <button
+                onClick={() => {
+                  playSound('knock');
+                  setMitigasiTab('evac');
+                }}
+                className={`py-2 px-1 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                  mitigasiTab === 'evac'
+                    ? 'bg-stone-900 text-white shadow-md'
+                    : 'text-stone-500 hover:bg-stone-200/50'
+                }`}
+              >
+                🗺️ Rute Evakuasi
               </button>
             </div>
+
+            {/* Conditionally Render Mitigasi Tab */}
+            {mitigasiTab === 'challenge' ? (
+              <div className="space-y-5">
+                {/* Challenge Container */}
+                <div className="w-full space-y-4 bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-sm">
+                  <div className="space-y-1 text-center">
+                    <span className="text-[8px] font-black tracking-widest text-[#ef4444] uppercase bg-red-50 border border-red-200/50 px-2.5 py-0.5 rounded-full">TANTANGAN SIAGA UTAMA</span>
+                    <h3 className="text-xs font-black text-stone-900 leading-snug">
+                      "Letusan terjadi! Hujan debu kaca vulkanik sangat tajam & gas sulfur terlepas mendadak. Amankan dirimu!"
+                    </h3>
+                    <p className="text-[9px] text-stone-400 font-bold">Pilih semua alat pelindung penunjang kehidupan yang tepat:</p>
+                  </div>
+
+                  {/* equipment selection lists */}
+                  <div className="space-y-2.5">
+                    {[
+                      {
+                        id: 'mask',
+                        label: '1. Masker Respirator N95',
+                        icon: '😷',
+                        isCorrect: true,
+                        desc: 'Menyaring partikel silika halus PM2.5 agar tidak merusak jaringan alveolus paru-paru.',
+                        explanation: 'Sempurna! Masker respirator N95 kedap udara & berserat elektrostatik khusus sanggup memfilter material silika mikro abrasif (butir kristal kaca tajam) hingga 95% untuk mencegah silikosis mematikan.'
+                      },
+                      {
+                        id: 'goggles',
+                        label: '2. Kacamata Goggles Kedap Mata',
+                        icon: '🥽',
+                        isCorrect: true,
+                        desc: 'Melindungi selaput mata dari debu kaca korosif agar kornea mata tidak tergores.',
+                        explanation: 'Suka sekali dengan ini! Abu gunung api berupa pecahan silika berpola pecahan kaca tajam bergerigi. Kacamata Goggles kedap udara menghalang robekan pupil & infeksi kornea berat.'
+                      },
+                      {
+                        id: 'hands',
+                        label: '3. Tutup Mulut dengan Telapak Tangan',
+                        icon: '✋',
+                        isCorrect: false,
+                        desc: 'Menggunakan kedua genggaman telapak tangan secara manual untuk menahan sebaran debu.',
+                        explanation: 'Keliru/Sangat Bahaya! Selah-selah jari tangan terlalu besar untuk membendung debu berukuran mikro. Menaruh tangan kotor berabu ke area wajah justru mempercepat penyebaran gas asam korosif ke jaringan sensitif mulut.'
+                      }
+                    ].map((item) => {
+                      const isSelected = selectedEquipments.includes(item.id);
+                      return (
+                        <div key={item.id} className="space-y-1.5">
+                          <button
+                            disabled={isSubmitted}
+                            onClick={() => handleEquipmentToggle(item.id)}
+                            className={`w-full p-4 rounded-3xl border-2 text-left transition-all flex items-start gap-3.5 relative overflow-hidden ${
+                              isSelected
+                                ? isSubmitted
+                                  ? item.isCorrect
+                                    ? 'bg-green-50/50 border-green-500 shadow-sm'
+                                    : 'bg-red-50/50 border-red-500 shadow-sm'
+                                  : 'bg-amber-55 border-amber-500 shadow-sm ring-2 ring-amber-400/10'
+                                : isSubmitted
+                                ? 'bg-stone-50 border-stone-200 opacity-60'
+                                : 'bg-stone-50 hover:bg-stone-100 border-stone-200'
+                            }`}
+                          >
+                            {/* Accent line on selected state */}
+                            {isSelected && (
+                              <div className={`absolute top-0 bottom-0 left-0 w-2 ${
+                                isSubmitted
+                                  ? item.isCorrect ? 'bg-green-500' : 'bg-red-500'
+                                  : 'bg-amber-500'
+                              }`} />
+                            )}
+
+                            <span className="text-3xl shrink-0 leading-none">{item.icon}</span>
+                            
+                            <div className="space-y-1 flex-1 pr-6">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-black text-stone-900 text-xs">{item.label}</h4>
+                                {isSelected ? (
+                                  isSubmitted ? (
+                                    <span className={`text-[8.5px] px-1.5 py-0.2 rounded font-black uppercase ${
+                                      item.isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                    }`}>
+                                      {item.isCorrect ? 'BENAR' : 'SALAH'}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[8.5px] px-1.5 py-0.2 bg-amber-100 text-amber-850 rounded font-black uppercase">
+                                      DIPILIH
+                                    </span>
+                                  )
+                                ) : null}
+                              </div>
+                              <p className="text-[10px] text-stone-500 font-semibold leading-tight">{item.desc}</p>
+                            </div>
+
+                            {/* Bullet Box indicator */}
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                              isSelected
+                                ? isSubmitted
+                                  ? item.isCorrect 
+                                    ? 'border-green-500 bg-green-500 text-white' 
+                                    : 'border-red-500 bg-red-500 text-white'
+                                  : 'border-amber-500 bg-amber-500 text-white'
+                                : 'border-stone-300'
+                            }`}>
+                              {isSelected && <span className="text-[9px] font-black">✓</span>}
+                            </div>
+                          </button>
+
+                          {/* Animated explanation display only once evaluated */}
+                          <AnimatePresence>
+                            {isSelected && isSubmitted && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className={`p-3.5 rounded-2xl text-[9.5px] font-semibold leading-relaxed border-l-4 ${
+                                  item.isCorrect
+                                    ? 'bg-green-50 text-green-700 border-green-400'
+                                    : 'bg-red-50 text-red-700 border-red-400'
+                                }`}
+                              >
+                                <strong>Analisi Medis:</strong> {item.explanation}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Submission and Evaluation Output screen */}
+                  {!isSubmitted ? (
+                    <button
+                      onClick={handleSubmitMitigation}
+                      disabled={selectedEquipments.length === 0}
+                      className={`w-full py-4 rounded-[20px] font-black text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 ${
+                        selectedEquipments.length === 0
+                          ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.98]'
+                      }`}
+                    >
+                      🛡️ Kirim Jawaban & Cek Hasil
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Evaluation status message or Certificate Reward Badge */}
+                      {selectedEquipments.includes('mask') && selectedEquipments.includes('goggles') && !selectedEquipments.includes('hands') ? (
+                        <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300/60 rounded-[24px] text-center space-y-3.5 shadow-sm">
+                          <motion.div 
+                            initial={{ scale: 0.8, rotate: -15 }}
+                            animate={{ scale: [1, 1.12, 1], rotate: [0, 6, -6, 0] }}
+                            transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+                            className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 relative border border-amber-300 shadow-md"
+                          >
+                            <Award size={34} />
+                            <span className="absolute -top-1 -right-1 text-base">🏅</span>
+                          </motion.div>
+                          
+                          <div className="space-y-1">
+                            <span className="text-[8.5px] font-black tracking-widest text-[#d97706] bg-amber-100 px-3 py-0.5 rounded-full uppercase border border-amber-200">LENCANA MITIGASI</span>
+                            <h4 className="text-base font-black tracking-tight uppercase italic text-amber-950">Pejuang Tangguh Bencana</h4>
+                            <p className="text-[10px] text-amber-900 font-bold leading-normal max-w-sm mx-auto">
+                              Lencana diberikan atas kepatuhan protektif paripurna! Pemilihan Masker N95 dan Kacamata Pelindung (Goggles) menyelamatkan Anda dari luka abrasi kornea serta infeksi silika paru-paru akut.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-[20px] text-center space-y-2">
+                          <div className="mx-auto w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                            <AlertTriangle size={20} />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[8px] font-black tracking-widest text-[#dc2626] bg-red-100 px-2.5 py-0.5 rounded-full uppercase">BELUM SEMPURNA</span>
+                            <h4 className="text-xs font-black text-red-900 uppercase">Perlindungan Belum Optimal!</h4>
+                            <p className="text-[9.5px] text-red-800 font-semibold leading-snug">
+                              {selectedEquipments.includes('hands')
+                                ? 'Pilihan memegang hidung/tutup mulut dengan tangan tidak efektif menepis pecahan kaca halus PM2.5. Tangan kotor juga membawa sisa debu masuk mata Anda.'
+                                : 'Anda belum memilih semua alat perlindungan wajib. Ingat Anda butuh perlindungan simultan (N95 + Goggles) agar selamat dari butir kristal tajam abu vulkanik.'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reset Challenge Button */}
+                      <button
+                        onClick={handleResetMitigation}
+                        className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-850 text-white font-black text-[10px] uppercase tracking-wider rounded-[18px] transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <RefreshCcw size={12} />
+                        Coba Lagi / Atur Ulang Pilihan
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info Card explaining the danger of volcanic ash */}
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex gap-2.5">
+                  <span className="text-lg shrink-0">☝️</span>
+                  <p className="text-[9.5px] text-amber-900 font-semibold leading-normal">
+                    <strong>Penting Diketahui:</strong> Partikel abu letusan itu BUKAN abu kayu lunak biasa, melainkan pecahan mineral glass silika yang keras, runcing, dan bergerigi mikro. Melindungi kornea mata & kantung napas adalah prioritas utama siaga dini.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Part 3: Tambahan Info Penting: Jalur Evakuasi di Sumatera Utara */}
+                <div className="w-full bg-[#fef3c7]/40 p-5 rounded-[28px] border-2 border-[#f59e0b]/20 shadow-sm space-y-4">
+                  <div className="flex gap-2.5 items-center">
+                    <div className="w-10 h-10 rounded-2xl bg-[#f59e0b]/20 text-[#d97706] flex items-center justify-center shrink-0">
+                      <Compass size={22} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <span className="text-[7.5px] font-black tracking-widest text-amber-700 bg-amber-100 px-2 py-0.5 rounded uppercase font-mono">PETA JALUR EVAKUASI SUMUT</span>
+                      <h3 className="text-sm font-black text-amber-950 tracking-tight leading-none mt-0.5">Ring Siaga Sumatra Utara</h3>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-amber-900 font-semibold leading-relaxed">
+                    Di Sumatera Utara, terdapat rangkaian gunung api aktif selain sisa kompleks kaldera Toba. Simak rute mitigasi kedaruratan dari lereng Gunung Sinabung atau Sibayak berikut:
+                  </p>
+
+                  {/* Volcano Selector Tabs (Sinabung & Sibayak) */}
+                  <div className="grid grid-cols-2 gap-2 bg-amber-950/5 p-1 rounded-2xl">
+                    <button
+                      onClick={() => { playSound('knock'); setActiveEvacTab('sinabung'); }}
+                      className={`py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all ${
+                        activeEvacTab === 'sinabung'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-amber-800 hover:bg-amber-50'
+                      }`}
+                    >
+                      🌋 GN. SINABUNG (AKTIF NYATA)
+                    </button>
+                    <button
+                      onClick={() => { playSound('knock'); setActiveEvacTab('sibayak'); }}
+                      className={`py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all ${
+                        activeEvacTab === 'sibayak'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-amber-800 hover:bg-amber-50'
+                      }`}
+                    >
+                      ⛰️ GN. SIBAYAK (AKTIF NORMAL)
+                    </button>
+                  </div>
+
+                  {/* Evacuation details body */}
+                  <div className="bg-white/80 p-4 rounded-2xl border border-amber-200/50 space-y-3">
+                    {activeEvacTab === 'sinabung' ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-1.5 items-center">
+                          <MapPin size={12} className="text-red-500 shrink-0" />
+                          <span className="text-[9.5px] font-black text-amber-950">JALUR & SEKTOR EVAKUASI SINABUNG:</span>
+                        </div>
+                        <ul className="text-[9.5px] text-amber-900 font-semibold space-y-2 list-disc pl-4 leading-normal">
+                          <li>
+                            <strong>Hindari Sektor Bahaya Utama:</strong> Sektor <strong>Selatan, Tenggara, dan Timur Laut</strong> gunung (terkena luncuran langsung awan panas Wedhus Gembel).
+                          </li>
+                          <li>
+                            <strong>Koridor Pengungsian Mandiri:</strong> Diungsikan ke arah utara menuju <strong>Berastagi</strong>, barat daya ke <strong>Kabanjahe</strong>, atau utara/barat laut ke daerah darat datar dataran tinggi Karo yang terisolir awan panas.
+                          </li>
+                          <li>
+                            <strong>Menjauhi Aliran Lau Borus:</strong> Sungai <strong>Lau Borus</strong> berpotensi mengalirkan lahar dingin sangat padat batu-batu vulkanik sisa semburan kawah. Jauhi sungai ini minimal 1-2 kilometer dari bantaran.
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-1.5 items-center">
+                          <MapPin size={12} className="text-red-500 shrink-0" />
+                          <span className="text-[9.5px] font-black text-amber-950">JALUR & SEKTOR EVAKUASI SIBAYAK:</span>
+                        </div>
+                        <ul className="text-[9.5px] text-amber-900 font-semibold space-y-2 list-disc pl-4 leading-normal">
+                          <li>
+                            <strong>Radius Bahaya Pemukiman:</strong> Kepundan kawah belerang Sibayak hanya berjarak <strong>7 KM dari pusat wisata Berastagi</strong>, menjadikannya rentan timbunan debu piroklastik pekat jika letupan mendadak terjadi.
+                          </li>
+                          <li>
+                            <strong>Arah Alur Pengungsian:</strong> Mengarah menjauh ke <strong>Kecamatan Nama Teran</strong> atau mengikuti jalan lintas Kabupaten ke arah <strong>Deli Serdang</strong>.
+                          </li>
+                          <li>
+                            <strong>Rute Evakuasi Alternatif:</strong> Jalur ke arah <strong>Medan Selatan</strong> melintasi Sembahe dapat difungsikan apabila ditiup angin timur laut, menjauhi koridor paparan debu utama dari puncak Sibayak.
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* General evacuation guideline tip card */}
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex gap-2">
+                    <span className="text-base shrink-0 leading-none">🚑</span>
+                    <p className="text-[9px] text-amber-850 font-bold leading-normal">
+                      <strong>Arahan Kedaruratan:</strong> Selalu perhatikan rambu evakuasi hijau bergambar arah berlari yang terpasang sepanjang jalan Karo, serta pantau arahan berkala dari posko PVMBG / BNPB di kota Berastagi.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
