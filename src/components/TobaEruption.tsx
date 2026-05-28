@@ -20,7 +20,14 @@ import {
   CheckCircle2,
   XCircle,
   Volume2,
-  Check
+  Check,
+  Play,
+  Pause,
+  VolumeX,
+  MapPin,
+  Map,
+  Eye,
+  Compass
 } from 'lucide-react';
 
 interface TobaEruptionProps {
@@ -39,12 +46,39 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
     localStorage.setItem('toba_current_page', currentPage);
   }, [currentPage]);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+
+  useEffect(() => {
+    if (currentPage !== 'mindful' && videoRef.current) {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  }, [currentPage]);
+
   const [activeTab, setActiveTab] = useState<'etno' | 'science'>('etno');
   const [viscosity, setViscosity] = useState<'basaltic' | 'andesitic' | 'rhyolitic'>('rhyolitic');
   const [pressure, setPressure] = useState<'low' | 'medium' | 'extreme'>('extreme');
   const [isSimulating, setIsSimulating] = useState(false);
   const [simResult, setSimResult] = useState<string | null>(null);
   const [magmaTemp, setMagmaTemp] = useState(850); // Celcius
+
+  // Meaningful state variables for Page A (Map) & Page B (Animation)
+  const [meaningfulPage, setMeaningfulPage] = useState<'A' | 'B'>('A');
+  const [selectedMarker, setSelectedMarker] = useState<string>('animal');
+  const [animationStep, setAnimationStep] = useState<number>(1);
+  const [isPlayingAnimation, setIsPlayingAnimation] = useState<boolean>(false);
+
+  useEffect(() => {
+    let interval: any;
+    if (isPlayingAnimation && currentPage === 'meaningful' && meaningfulPage === 'B') {
+      interval = setInterval(() => {
+        setAnimationStep((prev) => (prev % 4) + 1);
+      }, 4500);
+    }
+    return () => clearInterval(interval);
+  }, [isPlayingAnimation, currentPage, meaningfulPage]);
 
   // Mitigasi states
   interface MitigationItem {
@@ -378,53 +412,32 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
               <h1 className="text-3xl font-black text-stone-900 tracking-tighter leading-none uppercase italic">Hari Dimana<br />Bumi Hampir Mati</h1>
             </header>
 
-            {/* Simulated Ash Sky Illustration with falling particles */}
-            <div className="relative aspect-video bg-stone-900 rounded-[32px] overflow-hidden shadow-xl border-4 border-white flex flex-col items-center justify-center p-6 text-center group">
-              <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-stone-900 to-[#120505] opacity-95 z-0" />
-              <div className="absolute inset-0 pointer-events-none opacity-40">
-                {[...Array(15)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      y: ['-10%', '110%'],
-                      x: ['-5%', '105%'],
-                      opacity: [0, 1, 1, 0],
-                      scale: [0.6, 1.2, 0.4]
-                    }}
-                    transition={{
-                      duration: 6 + Math.random() * 5,
-                      repeat: Infinity,
-                      delay: i * 0.3,
-                      ease: "linear"
-                    }}
-                    className="absolute w-2 h-2 bg-stone-400 rounded-full blur-[1.5px]"
-                    style={{ left: `${Math.random() * 100}%`, top: '-5%' }}
-                  />
-                ))}
-              </div>
-
-              <div className="space-y-2 z-10">
-                <Flame size={40} className="text-orange-500 mx-auto animate-bounce" />
-                <p className="font-black text-white text-base tracking-tight uppercase italic leading-none">Super-Erupsi Gunung Toba</p>
-                <p className="text-[10px] font-semibold text-stone-300 max-w-[270px] mx-auto leading-normal">
-                  Kekuatan letusan dahsyat meledakkan 2.800 km³ magma, memicu zaman es vulkanik global selama 6 tahun!
-                </p>
-              </div>
-
-              <span className="absolute bottom-3 right-4 text-[8px] font-mono text-stone-500 uppercase tracking-widest z-10">VEI-8 CATEGORY</span>
+            {/* Interactive Video Player for Terbentuknya Toba */}
+            <div className="relative aspect-video bg-stone-950 rounded-[32px] overflow-hidden shadow-2xl border-4 border-white">
+              <video
+                ref={videoRef}
+                src="/ikantoba.mp4"
+                className="absolute inset-0 w-full h-full object-cover z-0"
+                playsInline
+                loop
+                muted
+                controls
+                onPlay={() => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+              />
             </div>
 
             <div className="space-y-4 text-stone-800 leading-relaxed text-sm font-medium">
               <p>
-                Gunung Toba purba meletus dengan kekuatan terdahsyat sejarah bumi, melepaskan debu vulkanik yang nyaris memusnahkan peradaban purba di berbagai penjuru benua.
+                Legenda bercerita tentang janji yang dilanggar, tentang air mata seorang ibu yang berubah menjadi banjir besar hingga menenggelamkan seluruh daratan dan melahirkan sebuah danau raksasa. Kisah itu diwariskan turun-temurun sebagai asal mula Danau Toba, penuh pesan tentang kejujuran dan janji yang harus dijaga.
               </p>
               <div className="bg-orange-500/5 p-5 rounded-[24px] border-2 border-orange-500/10 border-dashed">
                 <p className="italic font-black text-orange-600 uppercase tracking-tight text-xs">
-                  "Abu tebal menghalangi pancaran matahari, menurunkan suhu bumi rata-rata hingga 10-15°C secara masif. Manusia purba hanya tersisa beberapa ribu saja."
+                  "Namun jauh di balik legenda yang hidup di tengah masyarakat, jejak sains menyimpan cerita lain yang tak kalah menakjubkan. Sekitar 74 ribu tahun lalu, terjadi salah satu letusan gunung api terbesar dalam sejarah bumi — ledakan dahsyat yang mengguncang langit, memuntahkan abu vulkanik hingga menyebar ke berbagai belahan dunia, bahkan mengubah iklim global selama bertahun-tahun."
                 </p>
               </div>
               <p>
-                Konsekuensi runtuhnya dapur magma menyisakan patahan amblas selebar 100 km yang kelak menampung air tawar, menjadi danau vulkanik terdahsyat: <strong>Danau Toba</strong>.
+                Dari pertemuan antara mitos dan sains, lahirlah sebuah tempat yang bukan hanya indah, tetapi juga menyimpan rahasia masa lalu bumi. Selamat datang di jantung Supervolcano Toba, tempat di mana legenda, sejarah, dan kekuatan alam menyatu dalam satu kisah yang luar biasa.
               </p>
             </div>
 
@@ -450,124 +463,265 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
             <header className="pt-4 pb-3 text-center relative border-b border-stone-200/50">
               <h2 className="text-xl font-black text-stone-900 tracking-tighter uppercase italic">
                 Sains Geologi Toba<br/>
-                <span className="text-xs font-bold block text-orange-600 tracking-widest">(Anatomi Lempeng)</span>
+                <span className="text-xs font-bold block text-orange-600 tracking-widest">(Sirkuit Vulkanologi)</span>
               </h2>
-              <div className="absolute top-4 right-6">
-                <button 
-                  onClick={() => playSound('knock')} 
-                  className="bg-white p-2.5 rounded-full shadow-lg text-orange-600 active:scale-95 transition-all border border-stone-100"
-                >
-                  <Volume2 size={20} />
-                </button>
-              </div>
             </header>
 
-            <div className="relative flex flex-col items-center pb-8 px-6 pt-6">
-              <div className="w-full max-w-md flex flex-col gap-6">
+            <div className="relative flex flex-col items-center pb-8 px-5 pt-5">
+              <div className="w-full max-w-md flex flex-col gap-5">
                 
-                {/* Subduction Zone SVG diagram */}
-                <div className="w-full p-4 bg-stone-50 rounded-[32px] border border-stone-200 shadow-inner space-y-3">
-                  <svg viewBox="0 0 350 200" className="w-full bg-sky-200 rounded-2xl border border-stone-200">
-                    <rect width="350" height="90" fill="#bae6fd" />
-                    <rect x="0" y="90" width="120" height="30" fill="#38bdf8" opacity="0.6"/>
-                    
-                    {/* Oceanic Plate slipping */}
-                    <path d="M 0 110 L 150 160 L 250 200 L 0 200 Z" fill="#94a3b8" />
-                    <text x="35" y="150" fill="white" className="font-black text-[9px] uppercase tracking-wider rotate-[18deg]">Lempeng Samudra</text>
-                    
-                    {/* Continental Plate */}
-                    <path d="M 120 110 L 120 90 L 150 70 L 190 70 L 200 90 L 350 90 L 350 200 L 120 200 Z" fill="#b45309" />
-                    <text x="210" y="110" fill="white" className="font-black text-[9px] uppercase tracking-wider">Lempeng Sumatra</text>
-
-                    {/* Subduction Friction arrows */}
-                    <path d="M 50 115 L 120 138" stroke="red" strokeWidth="3" fill="none" />
-                    
-                    {/* Magma melting chamber */}
-                    <circle cx="210" cy="140" r="18" fill="red" className="animate-pulse" />
-                    <path d="M 210 140 L 205 90" stroke="red" strokeWidth="4" strokeDasharray="3,3" fill="none" />
-                    <text x="180" y="132" fill="yellow" className="font-black text-[8px] uppercase tracking-widest bg-stone-900 px-1 py-0.5 rounded leading-none">Dapur Magma</text>
-
-                    {/* Mountain peak */}
-                    <path d="M 180 90 L 210 50 L 240 90 Z" fill="#d97706" />
-                    <text x="212" y="65" fill="red" className="font-mono text-[9px] font-bold">Toba</text>
-                  </svg>
-                  <div className="text-center">
-                    <span className="text-[9px] font-mono font-bold text-stone-500 uppercase tracking-widest">ANATOMI DISIPASI PANAS SUBDUKSI</span>
-                  </div>
-                </div>
-
-                {/* Tab Controller */}
-                <div className="flex p-1.5 bg-stone-100 rounded-[32px] items-center">
+                {/* 2-Column Switcher Page A & Page B */}
+                <div className="flex p-1.5 bg-stone-100 rounded-[28px] items-center border border-stone-200/30">
                   <button 
-                    onClick={() => setActiveTab('etno')}
-                    className={`h-[35px] flex-1 rounded-[28px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                      activeTab === 'etno' ? 'bg-white text-orange-600 shadow-md' : 'text-stone-400'
+                    onClick={() => {
+                        playSound('knock');
+                        setMeaningfulPage('A');
+                    }}
+                    className={`h-[40px] flex-1 rounded-[24px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                      meaningfulPage === 'A' ? 'bg-white text-orange-600 shadow-sm border border-stone-200/40' : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
-                    <BookOpen size={14} />
-                    Proses Bumi
+                    <Map size={14} />
+                    Halaman A: Peta
                   </button>
                   <button 
-                    onClick={() => setActiveTab('science')}
-                    className={`h-[35px] flex-1 rounded-[28px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                      activeTab === 'science' ? 'bg-stone-900 text-orange-400 shadow-md' : 'text-stone-400'
+                    onClick={() => {
+                        playSound('knock');
+                        setMeaningfulPage('B');
+                    }}
+                    className={`h-[40px] flex-1 rounded-[24px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                      meaningfulPage === 'B' ? 'bg-white text-orange-600 shadow-sm border border-stone-200/40' : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
-                    <Zap size={14} />
-                    Gas Ideal
+                    <Sparkles size={14} className={meaningfulPage === 'B' ? 'animate-spin' : ''} />
+                    Halaman B: Animasi
                   </button>
                 </div>
 
-                <div className="bg-white rounded-[40px] shadow-xl border-2 border-stone-100 p-8 text-left">
-                  <AnimatePresence mode="wait">
-                    {activeTab === 'etno' ? (
-                      <motion.div
-                        key="etno"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="space-y-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-full bg-orange-600" />
-                          <h3 className="text-[20px] font-black text-stone-900 tracking-tighter uppercase italic">1. Subduksi & Magma</h3>
-                        </div>
-                        <p className="text-stone-700 text-sm font-semibold leading-relaxed">
-                          Lempeng Indo-Australia menyusup ke bawah Lempeng Eurasia di lepas pantai barat Sumatra. Panas ekstrem hasil gesekan mencairkan kerak bumi menjadi magma riolit kental yang bersiap menerjang penutup gunung.
-                        </p>
-                        <div className="pt-2 border-t border-stone-100">
-                          <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-wider">Hasil Batuan:</span>
-                          <p className="text-[11px] font-bold text-stone-500 mt-0.5">Membeku membentuk <strong className="text-stone-850">Rhyolite Tuff</strong> (Batu Apung khas Samosir).</p>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="science"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        className="space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-full bg-orange-500" />
-                            <h3 className="text-[20px] font-black text-stone-900 tracking-tighter uppercase italic">2. Rumus Gas</h3>
-                          </div>
-                          <div className="bg-stone-900 px-3 py-1 rounded-xl">
-                            <span className="font-mono text-orange-400 font-black text-xs">P.V = n.R.T</span>
-                          </div>
-                        </div>
-                        <p className="text-stone-700 text-sm font-semibold leading-relaxed">
-                          Magma kental memerangkap gelembung-gelembung gas vulkanik. Menurut konsep gas ideal, ketika volume ruang magma tetap konstan (V) sedangkan panas terus disuplai (T naik), tekanan gas (P) berkumpul berlipat ganda hingga penutup batuan jebol hancur!
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <AnimatePresence mode="wait">
+                  {meaningfulPage === 'A' ? (
+                    <motion.div
+                      key="map-page"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      className="space-y-4 w-full"
+                    >
+                      {/* Interactive Tectonic/Nature Map Card */}
+                      <div className="w-full p-4 bg-stone-50 rounded-[32px] border border-stone-200 shadow-md space-y-3">
+                        <div className="relative aspect-[4/3] bg-stone-100 rounded-2xl border border-stone-150 overflow-hidden shadow-inner">
+                          {/* Real uploaded Map background image */}
+                          <img 
+                            src="/peta%20meaningful.png" 
+                            alt="Peta Kaldera Toba" 
+                            className="absolute inset-0 w-full h-full object-cover z-0"
+                            referrerPolicy="no-referrer"
+                          />
 
+                          {/* Overlaying SVG Hotspots */}
+                          <svg viewBox="0 0 320 240" className="absolute inset-0 w-full h-full select-none z-10 bg-black/5">
+                            
+                            {/* SIGN MODE (Cari Tanda Alam) HOTSPOTS */}
+                            <g>
+                              {/* 1. Aktivitas Hewan - Bukit Barisan */}
+                              <g 
+                                onClick={() => { playSound('knock'); setSelectedMarker('animal'); }}
+                                className="cursor-pointer group/spot"
+                                transform="translate(95, 75)"
+                              >
+                                <circle cx="0" cy="0" r="14" fill="#f59e0b" className={`opacity-30 ${selectedMarker === 'animal' ? 'animate-ping' : ''}`} />
+                                <circle cx="0" cy="0" r="8" fill={selectedMarker === 'animal' ? '#d97706' : '#fcd34d'} stroke="white" strokeWidth="1.5" className="transition-colors duration-300" />
+                                <text x="-3.5" y="2.5" fill="white" className="text-[8px] font-black">🐾</text>
+                              </g>
+
+                              {/* 2. Suhu Air - Aek Rangat (Samosir Western Shore) */}
+                              <g 
+                                onClick={() => { playSound('knock'); setSelectedMarker('watertemp'); }}
+                                className="cursor-pointer group/spot"
+                                transform="translate(148, 112)"
+                              >
+                                <circle cx="0" cy="0" r="14" fill="#3b82f6" className={`opacity-30 ${selectedMarker === 'watertemp' ? 'animate-ping' : ''}`} />
+                                <circle cx="0" cy="0" r="8" fill={selectedMarker === 'watertemp' ? '#2563eb' : '#93c5fd'} stroke="white" strokeWidth="1.5" className="transition-colors duration-300" />
+                                <text x="-3.5" y="2.5" fill="white" className="text-[8px] font-black">♨️</text>
+                              </g>
+
+                              {/* 3. Mitos Gempa - Naga Padoha (Deep fault/lake basin) */}
+                              <g 
+                                onClick={() => { playSound('knock'); setSelectedMarker('nagapadoha'); }}
+                                className="cursor-pointer group/spot"
+                                transform="translate(205, 135)"
+                              >
+                                <circle cx="0" cy="0" r="16" fill="#ec4899" className={`opacity-30 ${selectedMarker === 'nagapadoha' ? 'animate-ping' : ''}`} />
+                                <circle cx="0" cy="0" r="8" fill={selectedMarker === 'nagapadoha' ? '#db2777' : '#fbcfe8'} stroke="white" strokeWidth="1.5" className="transition-colors duration-300" />
+                                <text x="-3.5" y="2.5" fill="white" className="text-[8px] font-black">🐉</text>
+                              </g>
+                            </g>
+
+                          </svg>
+
+                          {/* Float Legend Indicator Overlay */}
+                          <div className="absolute bottom-2 left-2 bg-stone-900/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[7px] font-bold font-mono tracking-wider text-stone-300 space-y-0.5 shadow-md">
+                            <span className={selectedMarker === 'animal' ? 'text-amber-400 font-black' : 'text-amber-400/70'}>🐾 1. AKTIVITAS HEWAN</span>
+                            <span className={selectedMarker === 'watertemp' ? 'text-blue-400 font-black' : 'text-blue-400/70'}>♨️ 2. SUHU AIR (AEK RANGAT)</span>
+                            <span className={selectedMarker === 'nagapadoha' ? 'text-pink-400 font-black' : 'text-pink-400/70'}>🐉 3. MITOS NAGA PADOHA</span>
+                          </div>
+                        </div>
+
+                        <div className="text-center">
+                          <span className="text-[9px] font-mono font-bold text-stone-500 uppercase tracking-widest flex items-center justify-center gap-1">
+                            <Compass size={11} /> 
+                            KETUK IKON DI SEKITAR KALDERA UNTUK CARI TANDA ALAM
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Map Geological & Kearifan Lokal Details card */}
+                      <div className="bg-white rounded-[32px] shadow-md border border-stone-200/60 p-6 text-left space-y-4">
+                        {/* SIGN MODE (Cari Tanda Alam) DESCRIPTIONS */}
+                        {selectedMarker === 'animal' && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-3"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 text-[12px] flex items-center justify-center">🐾</span>
+                              <h3 className="text-sm font-black text-stone-900 tracking-tight">Aktivitas Hewan (Pegunungan Bukit Barisan)</h3>
+                            </div>
+                            <p className="text-stone-700 text-[11.5px] font-semibold leading-relaxed">
+                              Mengapa masyarakat dulu percaya jika hewan turun dari pegunungan Bukit Barisan, itu adalah peringatan?
+                            </p>
+                            <p className="text-stone-605 text-[11px] font-medium leading-relaxed bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
+                              Hal ini berkaitan dengan sensor alami hewan. <strong className="text-amber-700">Sensor panas & getaran mikro</strong> instingtif pada cakar dan cangkang hewan sangat sensitif terhadap getaran seismik infrasonic terkecil dan naiknya temperatur lapisan tanah akibat akumulasi gas magmatik di kedalaman bumi yang tidak mampu dirasakan manusia. Ketika mendeteksi perubahan anomali alamiah yang ekstrem ini, kawanan satwa liar terdorong bermigrasi secara masif menuruni pegunungan demi menyelamatkan diri.
+                            </p>
+                          </motion.div>
+                        )}
+
+                        {selectedMarker === 'watertemp' && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-3"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-blue-100 border border-blue-300 text-[12px] flex items-center justify-center font-extrabold">♨️</span>
+                              <h3 className="text-sm font-black text-stone-900 tracking-tight">Suhu Air & Panas Bumi (Aek Rangat)</h3>
+                            </div>
+                            <p className="text-stone-700 text-[11.5px] font-semibold leading-relaxed">
+                              Munculnya sumber air panas (<strong className="text-blue-600">Aek Rangat</strong>) sebagai indikasi energi panas bumi yang masih aktif.
+                            </p>
+                            <p className="text-stone-605 text-[11px] font-medium leading-relaxed bg-blue-500/5 p-3.5 rounded-2xl border border-blue-500/20">
+                              Mata air Aek Rangat di kaki Gunung Pusuk Buhit membuktikan bahwa di bawah Kaldera Toba terdapat sistem kantung <strong className="text-blue-700">geothermal (panas bumi)aktif</strong>. Siklus air tanah yang merembes masuk ke dalam bumi dipanaskan oleh sisa-sisa batuan cair dapur magma purba yang suhunya masih membara, membuahkan uap gas belerang alami bertekanan termal yang mendobrak dan kembali memancar ke permukaan tanah.
+                            </p>
+                          </motion.div>
+                        )}
+
+                        {selectedMarker === 'nagapadoha' && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="space-y-3"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-pink-100 border border-pink-300 text-[12px] flex items-center justify-center font-extrabold">🐉</span>
+                              <h3 className="text-sm font-black text-stone-900 tracking-tight">Mitos Naga Padoha (Kearifan Gempa)</h3>
+                            </div>
+                            <p className="text-stone-700 text-[11.5px] font-semibold leading-relaxed">
+                              Cerita rakyat tentang naga mistis di bawah tanah merekam memori kebencanaan prasejarah.
+                            </p>
+                            <p className="text-stone-605 text-[11px] font-medium leading-relaxed bg-pink-500/5 p-3.5 rounded-2xl border border-pink-500/20">
+                              Legenda Batak menyebutkan bahwa gempa bumi dahsyat dipicu oleh menggeliatnya <strong className="text-pink-700">Naga Padoha</strong> yang memikul seluruh daratan Sumatra di bawah lapisan terdalam bumi. Secara ilmiah, mitologi puitis ini merupakan cara cerdas nenek moyang merekonsiliasikan, merekam, dan mentransmisikan bahaya gempa bumi tektonik & vulkanik akibat sesar geser Great Sumatran Fault dari generasi ke generasi melalui cerita lisan yang mudah dipahami demi keselamatan kolektif.
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="animation-page"
+                      initial={{ opacity: 0, x: 15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -15 }}
+                      className="space-y-4 w-full"
+                    >
+                      {/* Video Player Box - Terbentuknya Toba */}
+                      <div className="w-full p-4 bg-stone-900 rounded-[32px] border-2 border-white shadow-xl space-y-3 relative overflow-hidden">
+                        <div className="relative aspect-video bg-stone-950 rounded-2xl border border-stone-800 overflow-hidden flex items-center justify-center">
+                          <video
+                            src="/terbentuktoba.mp4"
+                            className="absolute inset-0 w-full h-full object-cover z-0"
+                            playsInline
+                            loop
+                            controls
+                            autoPlay
+                            muted
+                          />
+                        </div>
+
+                        {/* Video Title text */}
+                        <div className="text-center font-black uppercase text-xs tracking-wider text-orange-500 py-1.5 border-t border-b border-stone-800">
+                          Animasi Rekonstruksi Pembentukan Kaldera Toba
+                        </div>
+                      </div>
+
+                      {/* Educational Explanation Column */}
+                      <div className="bg-white rounded-[32px] shadow-md border border-stone-200/60 p-6 text-left space-y-5">
+                        
+                        {/* Section 1: Dapur Magma */}
+                        <div className="space-y-1.5">
+                          <h3 className="text-sm font-black text-stone-900 tracking-tight uppercase flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-600 block"></span>
+                            Dapur Magma
+                          </h3>
+                          <p className="text-stone-750 text-[11.5px] font-semibold leading-relaxed">
+                            Di bawah Danau Toba terdapat dapur magma, yaitu tempat berkumpulnya batuan cair panas di dalam bumi. Magma terus menumpuk dan menghasilkan tekanan besar hingga akhirnya memicu letusan super dahsyat.
+                          </p>
+                        </div>
+
+                        <div className="h-px bg-stone-100" />
+
+                        {/* Section 2: Tekanan Gas */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-stone-900 tracking-tight uppercase flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 block text-orange-500"></span>
+                              Tekanan Gas
+                            </h3>
+                            <div className="flex gap-1.5">
+                              <span className="font-mono text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100/70">P = n·R·T / V</span>
+                              <span className="font-mono text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100/70">P = F / A</span>
+                            </div>
+                          </div>
+                          <p className="text-stone-750 text-[11.5px] font-semibold leading-relaxed">
+                            Magma Toba mengandung gas terlarut dalam jumlah masif. Berdasarkan rumus hukum gas ideal <strong className="text-orange-600">P = n·R·T / V</strong>, ketika temperatur magma (<strong className="text-stone-850">T</strong>) terus meroket di ruang dapur magma bervolume tetap (<strong className="text-stone-850">V</strong>), maka tekanan gas (<strong className="text-stone-850">P</strong>) akan berlipat ganda melampaui batas batas kritis batuan bumi.
+                          </p>
+                          <p className="text-stone-600 text-[11px] font-medium leading-relaxed bg-orange-50/30 p-3 rounded-2xl border border-orange-100/50">
+                            Merujuk pada hukum tekanan fisika dasar <strong className="text-orange-600">P = F / A</strong>, akumulasi tekanan gas (<strong className="text-stone-850">P</strong>) menyuplai akumulasi gaya dorong (<strong className="text-stone-850">F</strong>) yang luar biasa besar terhadap luas area permukaan (<strong className="text-stone-850">A</strong>) penutup berupa badan gunung api di atasnya. Proses ini bagaikan botol soda yang dikocok kuat—ketika kekuatan dinding gunung tidak lagi mampu menahan gaya dorong gas raksasa ini, katup pengaman alami jebol dan terjadilah ledakan supervolcano Toba yang meletus secara dahsyat.
+                          </p>
+                        </div>
+
+                        <div className="h-px bg-stone-100" />
+
+                        {/* Section 3: Resurgent Dome */}
+                        <div className="space-y-1.5">
+                          <h3 className="text-sm font-black text-stone-900 tracking-tight uppercase flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block"></span>
+                            Resurgent Dome
+                          </h3>
+                          <p className="text-stone-750 text-[11.5px] font-semibold leading-relaxed">
+                            Setelah letusan besar terjadi, magma baru dari bawah bumi mendorong bagian tengah kaldera naik ke permukaan. Proses ini membentuk Pulau Samosir di tengah Danau Toba.
+                          </p>
+                        </div>
+
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Back to main road button or Play Simulator redirection */}
                 <button 
                   onClick={() => setCurrentPage('joyful')}
-                  className="w-full bg-stone-900 hover:bg-stone-850 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-transform uppercase tracking-widest text-xs"
+                  className="w-full bg-stone-900 hover:bg-stone-850 text-white font-black py-4 rounded-[24px] flex items-center justify-center gap-3 shadow-md active:scale-95 transition-transform uppercase tracking-widest text-xs"
                 >
                   Buka Simulator Erupsi
                   <Activity size={14} className="text-orange-500 animate-pulse" />
