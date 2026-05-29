@@ -476,7 +476,7 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
                     }`}
                   >
                     <Map size={14} />
-                    Halaman A: Peta
+                    A: Peta
                   </button>
                   <button 
                     onClick={() => {
@@ -488,7 +488,7 @@ export default function TobaEruption({ onBack }: TobaEruptionProps) {
                     }`}
                   >
                     <Sparkles size={14} className={meaningfulPage === 'B' ? 'animate-spin' : ''} />
-                    Halaman B: Animasi
+                    B: Animasi
                   </button>
                 </div>
 

@@ -37,6 +37,10 @@ export default function HutanLarangan({ onBack }: HutanLaranganProps) {
   }, [currentPage]);
 
   const [activeTab, setActiveTab] = useState<'zonasi' | 'hidrologi'>('zonasi');
+  const [meaningfulTab, setMeaningfulTab] = useState<'A' | 'B'>('A');
+  const [hasRoots, setHasRoots] = useState<boolean>(true);
+  const [pullForce, setPullForce] = useState<number>(0);
+  const [selectedArea, setSelectedArea] = useState<'gundul' | 'harangan'>('harangan');
 
   // Simulation states
   const [currentWave, setCurrentWave] = useState(1);
@@ -467,65 +471,149 @@ export default function HutanLarangan({ onBack }: HutanLaranganProps) {
             exit={{ opacity: 0, y: -20 }}
             className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 pb-20 text-left"
           >
-            <header className="space-y-2">
-              <div className="flex border-b-2 border-dashed border-stone-200 pb-2 mb-4">
-                <span className="text-teal-600 font-black text-[10px] uppercase tracking-[0.2em] italic">Hukum Konservasi Adat</span>
+            <header className="space-y-1">
+              <div className="flex border-b-2 border-dashed border-stone-200 pb-2 mb-3">
+                <span className="text-teal-600 font-extrabold text-[9px] uppercase tracking-[0.25em] italic">Misteri & Perlindungan Adat</span>
               </div>
-              <h1 className="text-3xl font-black text-stone-900 tracking-tighter leading-none uppercase italic">Ilmu Konservasi <br />Leluhur Batak</h1>
+              <h1 className="text-3xl font-black text-stone-900 tracking-tighter leading-none uppercase italic">Harangan Batak</h1>
+              <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Menatap Gerbang Kelestarian Rimba Purba</p>
             </header>
 
-            <div className="relative aspect-video bg-stone-900 rounded-[32px] overflow-hidden shadow-xl border-4 border-white flex flex-col items-center justify-center p-6 text-center group">
-              <div className="absolute inset-0 bg-gradient-to-t from-teal-950 via-stone-900 to-[#0e1613] opacity-95 z-0" />
-              <div className="absolute inset-0 pointer-events-none opacity-20">
-                {[...Array(10)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      y: ['-10%', '110%'],
-                      opacity: [0, 1, 0]
-                    }}
-                    transition={{
-                      duration: 6 + Math.random() * 4,
-                      repeat: Infinity,
-                      delay: i * 0.5
-                    }}
-                    className="absolute w-1.5 h-6 bg-teal-400 rounded-full"
-                    style={{ left: `${Math.random() * 100}%` }}
-                  />
-                ))}
+            {/* Visual Content: Hutan lebat di lereng bukit dengan kabut tebal + papan kayu */}
+            <div className="relative aspect-[4/3] bg-gradient-to-b from-[#111f1a] to-[#040a08] rounded-[36px] overflow-hidden shadow-2xl border-4 border-white flex flex-col justify-between p-5 relative">
+              <style>{`
+                @keyframes fogSlowDrift1 {
+                  0% { transform: translateX(-15%) translateY(5px) scale(1); opacity: 0.2; }
+                  50% { transform: translateX(15%) translateY(-10px) scale(1.15); opacity: 0.55; }
+                  100% { transform: translateX(-15%) translateY(5px) scale(1); opacity: 0.2; }
+                }
+                @keyframes fogSlowDrift2 {
+                  0% { transform: translateX(15%) translateY(-5px) scale(1.1); opacity: 0.3; }
+                  50% { transform: translateX(-15%) translateY(10px) scale(0.9); opacity: 0.6; }
+                  100% { transform: translateX(15%) translateY(-5px) scale(1.1); opacity: 0.3; }
+                }
+                @keyframes treeSway {
+                  0%, 100% { transform: rotate(0deg); }
+                  50% { transform: rotate(1.5deg); }
+                }
+                .anim-fog-1 {
+                  animation: fogSlowDrift1 12s infinite ease-in-out;
+                }
+                .anim-fog-2 {
+                  animation: fogSlowDrift2 16s infinite ease-in-out;
+                }
+                .anim-tree {
+                  animation: treeSway 5s infinite ease-in-out;
+                }
+              `}</style>
+
+              {/* Mountains & Hills Layout (Lereng Bukit) */}
+              <div className="absolute inset-0 pointer-events-none z-0">
+                {/* Sky & Clouds glow */}
+                <div className="absolute top-2 left-1/4 w-36 h-20 bg-teal-800/10 rounded-full blur-3xl" />
+                
+                {/* Hill Background 3 */}
+                <div className="absolute bottom-16 -left-10 right-0 h-36 bg-emerald-950/40 rounded-[100%] rotate-3 transform-gpu filter blur-[1px]" />
+
+                {/* Hill Background 2 */}
+                <div className="absolute bottom-10 -right-20 -left-10 h-32 bg-teal-950/60 rounded-[100%] -rotate-2 transform-gpu" />
+
+                {/* Main Fore Slope (Lereng Utama) */}
+                <div className="absolute bottom-0 left-0 right-[-30px] h-28 bg-[#091b14] rounded-[100%] rotate-3 flex items-start pt-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/30 to-transparent pointer-events-none" />
+                </div>
               </div>
 
-              <div className="space-y-2 z-10">
-                <Compass size={40} className="text-teal-400 mx-auto animate-spin" style={{ animationDuration: '8s' }} />
-                <p className="font-black text-white text-base tracking-tight uppercase italic leading-none">Hutan Adat Harangan</p>
-                <p className="text-[10px] font-semibold text-stone-300 max-w-[270px] mx-auto leading-normal">
-                  Sistem pemetaan tradisional Batak membagi rimba menjadi tiga sabuk penyangga demi kelestarian alam bersama.
-                </p>
+              {/* Overlapping Dense Trees (Hutan Lebat) */}
+              <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {/* Back trees */}
+                <div className="absolute bottom-20 left-[15%] opacity-40 scale-75 text-emerald-800 anim-tree" style={{ animationDelay: '0.5s' }}><Trees size={40} /></div>
+                <div className="absolute bottom-16 left-[40%] opacity-35 scale-90 text-teal-800 anim-tree" style={{ animationDelay: '1.2s' }}><Trees size={38} /></div>
+                <div className="absolute bottom-22 right-[20%] opacity-45 scale-75 text-emerald-700 anim-tree" style={{ animationDelay: '0s' }}><Trees size={44} /></div>
+
+                {/* Mid trees */}
+                <div className="absolute bottom-12 left-5 opacity-60 text-emerald-900 anim-tree" style={{ animationDelay: '2s' }}><Trees size={50} /></div>
+                <div className="absolute bottom-10 right-8 opacity-75 text-[#0a271c] anim-tree" style={{ animationDelay: '0.8s' }}><Trees size={56} /></div>
+                <div className="absolute bottom-14 left-[55%] opacity-55 text-teal-900 anim-tree" style={{ animationDelay: '1.5s' }}><Trees size={48} /></div>
+
+                {/* Front big trees framing */}
+                <div className="absolute bottom-4 left-[22%] opacity-85 text-emerald-950 anim-tree"><Trees size={62} /></div>
+                <div className="absolute bottom-2 right-[25%] opacity-90 text-emerald-950 anim-tree" style={{ animationDelay: '0s' }}><Trees size={68} /></div>
               </div>
 
-              <span className="absolute bottom-3 right-4 text-[8px] font-mono text-stone-500 uppercase tracking-widest z-10 font-black">ADAT CONSERVATION RULES</span>
+              {/* Thick Floating Fog layers (Kabut Tebal) */}
+              <div className="absolute inset-0 pointer-events-none z-20">
+                <div className="absolute top-[20%] left-[-20%] w-[140%] h-[55%] bg-stone-100/10 rounded-full blur-2xl anim-fog-1" />
+                <div className="absolute top-[35%] right-[-20%] w-[140%] h-[50%] bg-teal-100/15 rounded-full blur-3xl anim-fog-2" />
+                <div className="absolute bottom-[-15%] left-[-10%] w-[120%] h-[40%] bg-stone-200/5 blur-xl pointer-events-none animate-pulse" />
+              </div>
+
+              {/* Simple subtle vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none z-30" />
+
+              {/* Status Tag on top */}
+              <div className="z-30 self-start">
+                <span className="text-[7.5px] font-black tracking-[0.2em] px-2.5 py-1 bg-black/65 text-teal-400 rounded-full border border-teal-500/30 backdrop-blur-md uppercase">
+                  🌲 Atmosfer Halimun Harangan
+                </span>
+              </div>
+
+              {/* Rustic Wood Signboard: "Hutan Larangan: Jangan Menebang, Jangan Merusak" */}
+              <div className="z-30 self-center flex flex-col items-center select-none w-full max-w-[280px]">
+                {/* Wood Signpost peg */}
+                <div className="w-2.5 h-12 bg-amber-950 border-r border-amber-900 shadow-md transform translate-y-3" />
+                
+                {/* Weathered Wooden sign element */}
+                <div className="w-full bg-gradient-to-br from-[#593922] to-[#3a2010] p-3 rounded-2xl border-4 border-[#281408] shadow-[0_8px_30px_rgb(0,0,0,0.6)] text-center space-y-1 relative">
+                  {/* Fake rustic nails */}
+                  <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-stone-700 border border-stone-800" />
+                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-stone-700 border border-stone-800" />
+                  <div className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-stone-700 border border-stone-805" />
+                  <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-stone-700 border border-stone-805" />
+                  
+                  {/* Local script decoration (Batak Script inspired glyps) */}
+                  <div className="text-[#e2b07e] font-serif tracking-[0.35em] text-[10px] leading-none opacity-85 select-none font-bold animate-pulse">
+                    ᯂᯮᯖᯉ᯲ ᯞᯒᯝᯉ᯲
+                  </div>
+                  
+                  {/* Indonesian Translated Warning Label */}
+                  <div className="space-y-0.5">
+                    <h3 className="font-extrabold text-[#fdf4e8] tracking-widest text-[11px] uppercase leading-tight font-sans">
+                      Hutan Larangan
+                    </h3>
+                    <div className="w-16 h-[1.5px] bg-red-500/80 mx-auto rounded-full" />
+                    <p className="text-[8.5px] text-[#fbf1c7]/95 font-black uppercase tracking-wider leading-tight">
+                      Jangan Menebang,<br />Jangan Merusak.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Info Status bar */}
+              <div className="z-30 flex justify-between items-center w-full min-h-[14px]">
+                <span className="text-[8px] text-white/50 uppercase font-black tracking-widest">Ketinggian: 1,400 MDPL</span>
+                <span className="text-[8px] text-teal-400 font-extrabold animate-pulse">● KRISTAL KABUT TEBAL</span>
+              </div>
             </div>
 
-            <div className="space-y-4 text-stone-800 leading-relaxed text-sm font-medium">
-              <p>
-                Tetua adat sadar bahwa hilangnya pohon tutupan di lereng perbukitan terjal akan merobek pertahanan rembes air permukaan, memicu keringnya sumur-sumur desa seketika.
-              </p>
-              <div className="bg-teal-500/5 p-5 rounded-[24px] border-2 border-teal-500/10 border-dashed">
-                <p className="italic font-black text-teal-700 uppercase tracking-tight text-xs">
-                  "Zona sakral Harangan dilarang ditebang seujung dahan pun. Ini adalah penahan alami banjir aliran air tanah."
-                </p>
-              </div>
-              <p>
-                Ayo cari tahu bagaimana akar menyatukan butiran lereng bukit dari perspektif fisika kohesi tanah!
+            {/* Narrative text requested by user */}
+            <div className="bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-sm space-y-3">
+              <span className="text-[8px] font-black tracking-widest text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/50 uppercase">Naskah Filosofis</span>
+              <p className="text-stone-800 font-semibold text-[11.5px] leading-relaxed select-none first-letter:text-2xl first-letter:font-black first-letter:text-teal-700 first-letter:mr-1 first-letter:float-left">
+                "Nenek moyang kita percaya bahwa hutan ini memiliki penjaga, sehingga tidak boleh ada satu pun pohon yang ditebang. Benarkah itu hanya mitos, atau sebuah strategi jenius untuk melindungi desa dari amukan tanah dan haus yang berkepanjangan?"
               </p>
             </div>
 
+            {/* Interactive button element requested by user */}
             <button 
-              onClick={() => setCurrentPage('meaningful')}
-              className="w-full bg-teal-700 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-transform uppercase tracking-widest text-xs border-b-4 border-teal-950"
+              onClick={() => {
+                playSound('knock');
+                setCurrentPage('meaningful');
+              }}
+              className="w-full bg-emerald-700 hover:bg-emerald-650 text-white font-black py-4.5 rounded-[22px] flex items-center justify-center gap-2.5 shadow-xl active:scale-95 transition-transform uppercase tracking-widest text-xs border-b-4 border-emerald-950"
             >
-              Mulai Ulas Sains Ekologi
-              <ChevronRight size={18} />
+              <span>🌲 Masuk ke Dalam Hutan</span>
+              <ChevronRight size={16} className="text-white/80 shrink-0" />
             </button>
           </motion.div>
         )}
@@ -541,8 +629,8 @@ export default function HutanLarangan({ onBack }: HutanLaranganProps) {
           >
             <header className="pt-4 pb-3 text-center relative border-b border-stone-200/50">
               <h2 className="text-xl font-black text-stone-900 tracking-tighter uppercase italic">
-                Sains Kohesi Tanah<br/>
-                <span className="text-xs font-bold block text-teal-600 tracking-widest">(Mekanika Struktur Akar)</span>
+                Ulasan Mekanika & Hidrologi<br/>
+                <span className="text-xs font-bold block text-teal-600 tracking-widest">(Mari Belajar Sains Hutan Adat!)</span>
               </h2>
               <div className="absolute top-4 right-6">
                 <button 
@@ -557,94 +645,563 @@ export default function HutanLarangan({ onBack }: HutanLaranganProps) {
             <div className="relative flex flex-col items-center pb-8 px-6 pt-6">
               <div className="w-full max-w-md flex flex-col gap-6">
                 
-                {/* Visual grid graphic representing zoning rules and structure */}
-                <div className="w-full p-4 bg-stone-50 rounded-[32px] border border-stone-200 shadow-inner space-y-4">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-teal-900 text-white p-3 rounded-2xl text-center space-y-1">
-                      <Trees size={20} className="mx-auto" />
-                      <p className="font-black text-[8px] uppercase tracking-tighter">1. Harangan</p>
-                      <p className="text-[6px] text-stone-300">Zonasi Tutupan Total</p>
-                    </div>
-                    <div className="bg-yellow-750 text-white p-3 rounded-2xl text-center space-y-1">
-                      <Compass size={20} className="mx-auto" />
-                      <p className="font-black text-[8px] uppercase tracking-tighter">2. Tombak</p>
-                      <p className="text-[6px] text-stone-200">Menyadap Kemenyan</p>
-                    </div>
-                    <div className="bg-orange-800 text-white p-3 rounded-2xl text-center space-y-1">
-                      <Heart size={20} className="mx-auto" />
-                      <p className="font-black text-[8px] uppercase tracking-tighter">3. Gadung</p>
-                      <p className="text-[6px] text-stone-200">Multi Kebun Kopi</p>
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-mono font-bold text-stone-400 uppercase tracking-widest text-center block">SABUK ADAT LINGKUNGAN BATAK</span>
-                </div>
-
-                {/* Tab selectors */}
-                <div className="flex p-1.5 bg-stone-100 rounded-[32px] items-center">
+                {/* Part A vs Part B Tab selectors */}
+                <div className="grid grid-cols-2 p-1.5 bg-stone-100 rounded-[28px] items-center border border-stone-200">
                   <button 
-                    onClick={() => setActiveTab('zonasi')}
-                    className={`h-[35px] flex-1 rounded-[28px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                      activeTab === 'zonasi' ? 'bg-white text-teal-600 shadow-md' : 'text-stone-400'
+                    onClick={() => {
+                      playSound('knock');
+                      setMeaningfulTab('A');
+                      setPullForce(0);
+                    }}
+                    className={`py-3 rounded-[24px] font-black text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                      meaningfulTab === 'A' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200/50'
                     }`}
                   >
-                    <BookOpen size={14} />
-                    Zonasi Rimba
+                    <Trees size={13} />
+                    Bagian A: Jangkar Akar
                   </button>
                   <button 
-                    onClick={() => setActiveTab('hidrologi')}
-                    className={`h-[35px] flex-1 rounded-[28px] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                      activeTab === 'hidrologi' ? 'bg-stone-900 text-teal-450 shadow-md' : 'text-stone-400'
+                    onClick={() => {
+                      playSound('knock');
+                      setMeaningfulTab('B');
+                    }}
+                    className={`py-3 rounded-[24px] font-black text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                      meaningfulTab === 'B' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-200/50'
                     }`}
                   >
-                    <Zap size={14} />
-                    Kohesi Tanah
+                    <Zap size={13} />
+                    Bagian B: Hidrologi Air
                   </button>
                 </div>
 
-                <div className="bg-white rounded-[40px] shadow-xl border-2 border-stone-100 p-8">
-                  <AnimatePresence mode="wait">
-                    {activeTab === 'zonasi' ? (
-                      <motion.div
-                        key="zonasi"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="space-y-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-full bg-teal-600" />
-                          <h3 className="text-[20px] font-black text-stone-900 tracking-tighter uppercase italic">Adat & Resapan</h3>
-                        </div>
-                        <p className="text-stone-700 text-sm font-semibold leading-relaxed">
-                          Masyarakat adat membelah hutan adat menjadi tiga zona fungsional (Harangan sakral, Tombak yang dimanfaatkan untuk getah kemenyan haminjon, dan Pargadungan agro). Struktur ini mengunci kelestarian ekologi tanpa mematikan mata pencaharian warga.
+                <AnimatePresence mode="wait">
+                  {meaningfulTab === 'A' ? (
+                    <motion.div
+                      key="tab-a"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      className="space-y-6"
+                    >
+                      {/* Sub-Header */}
+                      <div className="space-y-1">
+                        <span className="text-[8px] font-black tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-250 uppercase">
+                          Sains Mekanika Tanah
+                        </span>
+                        <h3 className="text-lg font-black text-stone-900 uppercase tracking-tight">
+                          1️⃣ Mekanika Jangkar Akar & Kohesi
+                        </h3>
+                        <p className="text-[10px] text-stone-500 font-bold leading-snug">
+                          Lihat struktur internal lereng bukit melalui sinar-X (X-Ray) dan rasakan kekuatan cengkeraman akar!
                         </p>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="hidrologi"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        className="space-y-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-full bg-emerald-500" />
-                          <h3 className="text-[20px] font-black text-stone-900 tracking-tighter uppercase italic">Sains Kohesi Akar</h3>
-                        </div>
-                        <p className="text-stone-700 text-sm font-semibold leading-relaxed">
-                          Anyaman biologis dari akar <strong className="text-emerald-600">Bamboo</strong> & rumput <strong className="text-emerald-600">Vetiver</strong> memiliki struktur anyaman berserat padat yang menembus dangkalan batuan dalam. Anyaman ini bertindak laksana jangkar pasak menyebarkan gaya geser air hujan sehingga tebing tetap kaku tahan longsor.
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                      </div>
 
+                      {/* Interactive Section Selector: Root State Toggle */}
+                      <div className="grid grid-cols-2 gap-2 bg-stone-50 p-1 rounded-2xl border border-stone-200/60 shadow-inner">
+                        <button
+                          onClick={() => {
+                            playSound('knock');
+                            setHasRoots(true);
+                            setPullForce(0);
+                          }}
+                          className={`py-2 px-1 text-[9px] font-black uppercase rounded-xl transition-all ${
+                            hasRoots
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'text-stone-600 hover:bg-white/50'
+                          }`}
+                        >
+                          🌲 Ada Akar (Lestari)
+                        </button>
+                        <button
+                          onClick={() => {
+                            playSound('knock');
+                            setHasRoots(false);
+                            setPullForce(0);
+                          }}
+                          className={`py-2 px-1 text-[9px] font-black uppercase rounded-xl transition-all ${
+                            !hasRoots
+                              ? 'bg-red-600 text-white shadow-sm'
+                              : 'text-stone-600 hover:bg-white/50'
+                          }`}
+                        >
+                          🪵 Tanpa Akar (Gundul)
+                        </button>
+                      </div>
+
+                      {/* X-RAY VISUALIZATION AREA */}
+                      <div className="relative aspect-[4/3] bg-zinc-950 rounded-[32px] overflow-hidden border-4 border-stone-900 shadow-2xl flex flex-col justify-between p-4 transform-gpu">
+                        {/* Simulation blue grid overlay */}
+                        <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none opacity-[0.06] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:16px_16px]" />
+                        
+                        {/* Title Watermark */}
+                        <div className="absolute top-3 left-3 text-[7.5px] font-mono text-zinc-650 tracking-[0.25em] z-10 font-bold uppercase">
+                          ⚡ LERENG LOKAL X-RAY SCANNER
+                        </div>
+
+                        {/* Interactive Hill & Tree Graphic (SVG based layout) */}
+                        <div className="absolute inset-0 flex items-end pointer-events-none z-10 overflow-hidden">
+                          {/* Underground Grid Boundary with Glow */}
+                          <svg className="w-full h-full" viewBox="0 0 320 240">
+                            {/* Underground rock particles */}
+                            <g className="opacity-40">
+                              <circle cx="45" cy="180" r="4" fill="#a8a29e" />
+                              <circle cx="85" cy="195" r="5" fill="#a8a29e" />
+                              <circle cx="120" cy="175" r="4" fill="#78716c" />
+                              <circle cx="160" cy="190" r="6" fill="#a8a29e" />
+                              <circle cx="210" cy="185" r="5" fill="#78716c" />
+                              <circle cx="250" cy="200" r="3.5" fill="#a8a29e" />
+                            </g>
+
+                            {/* Slanted Slope Earth representation line */}
+                            <path 
+                              d="M -10,130 Q 160,150 330,175 L 330,250 L -10,250 Z" 
+                              fill="#131316" 
+                              stroke="#57534e" 
+                              strokeWidth="2.5" 
+                            />
+
+                            {/* Ground slope shear stress lines (red warning when pulling too hard without roots) */}
+                            {!hasRoots && pullForce > 45 && (
+                              <g className="stroke-red-500 opacity-60 animate-pulse" strokeWidth="1.5" strokeDasharray="2,3">
+                                <line x1="80" y1="145" x2="160" y2="155" />
+                                <line x1="160" y1="155" x2="260" y2="168" />
+                              </g>
+                            )}
+
+                            {/* Tree positioning with local rotation when slipping */}
+                            <g 
+                              transform={`translate(160, 142) rotate(${
+                                !hasRoots && pullForce > 30 
+                                  ? Math.min(32, (pullForce - 30) * 0.7) 
+                                  : 0
+                              }) translate(-160, -142)`}
+                              style={{ transition: 'transform 0.15s ease-out' }}
+                            >
+                              {/* The Virtual Tree Roots (X-RAY VIEW) */}
+                              {hasRoots ? (
+                                <g className="stroke-emerald-400" strokeWidth="2.2" strokeLinecap="round" fill="none">
+                                  {/* Deep networks of root anchor filaments */}
+                                  <path d="M 160,140 Q 150,165 120,185" className={pullForce > 40 ? "animate-pulse" : ""} style={{ strokeWidth: pullForce > 40 ? 3 : 2.2 }} />
+                                  <path d="M 160,140 Q 170,170 210,195" className={pullForce > 40 ? "animate-pulse" : ""} style={{ strokeWidth: pullForce > 40 ? 3 : 2.2 }} />
+                                  <path d="M 160,140 L 165,220" className={pullForce > 40 ? "animate-pulse" : ""} style={{ strokeWidth: pullForce > 40 ? 3.5 : 2.2 }} />
+                                  <path d="M 165,180 Q 185,195 195,215" />
+                                  <path d="M 155,165 Q 135,190 145,210" />
+                                  <path d="M 165,200 Q 150,215 130,225" />
+                                  
+                                  {/* Anchor indicators (glowing green circles around bounded rock particles) */}
+                                  <circle cx="120" cy="185" r="4.5" fill="none" className="animate-ping" style={{ animationDuration: '3s' }} />
+                                  <circle cx="210" cy="195" r="4.5" fill="none" className="animate-ping" style={{ animationDuration: '4s' }} />
+                                  <circle cx="165" cy="220" r="5" fill="none" className="animate-ping" style={{ animationDuration: '2.5s' }} />
+                                </g>
+                              ) : (
+                                <g className="stroke-red-500/60" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4,4" fill="none">
+                                  {/* Cut, broken, weak roots */}
+                                  <path d="M 160,140 Q 155,152 145,158" />
+                                  <path d="M 160,140 Q 165,155 175,160" />
+                                  <line x1="160" y1="140" x2="161" y2="152" />
+                                  
+                                  {/* Failure shear crack lines */}
+                                  {pullForce > 30 && (
+                                    <path d="M 130,135 Q 160,150 190,145" stroke="#ef4444" strokeWidth="2.5" />
+                                  )}
+                                </g>
+                              )}
+
+                              {/* Visible Tree Trunk and Foliage */}
+                              <g fill={hasRoots ? "#10b981" : "#b45309"}>
+                                {/* Trunk */}
+                                <rect x="156" y="90" width="8" height="50" fill="#78350f" rx="1" />
+                                {/* Branches */}
+                                <path d="M 160,110 L 140,95" stroke="#78350f" strokeWidth="2" />
+                                <path d="M 160,100 L 178,88" stroke="#78350f" strokeWidth="2" />
+
+                                {/* Foliage Layers */}
+                                {hasRoots ? (
+                                  <>
+                                    <circle cx="160" cy="70" r="24" fill="#047857" className="opacity-90" />
+                                    <circle cx="145" cy="80" r="16" fill="#065f46" className="opacity-95" />
+                                    <circle cx="175" cy="78" r="18" fill="#10b981" className="opacity-80" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <path d="M 160,65 L 142,85 L 178,85 Z" fill="#78350f" />
+                                    <circle cx="160" cy="65" r="10" fill="#a16207" className="opacity-80" />
+                                    <p className="font-mono text-stone-500 font-bold" />
+                                  </>
+                                )}
+                              </g>
+                            </g>
+                          </svg>
+                        </div>
+
+                        {/* Top corner metrics HUD display */}
+                        <div className="z-20 text-right space-y-1 select-none pointer-events-none">
+                          <div className="inline-block bg-zinc-900/95 border border-zinc-800 px-3 py-1 rounded-xl">
+                            <span className="text-[7.5px] font-bold text-zinc-400 block tracking-widest uppercase">
+                              STABILITAS LERENG:
+                            </span>
+                            <span className={`font-mono text-[11px] font-black ${
+                              hasRoots
+                                ? 'text-emerald-400'
+                                : pullForce < 30
+                                ? 'text-amber-400 animate-pulse'
+                                : 'text-red-500 animate-bounce'
+                            }`}>
+                              {hasRoots 
+                                ? '100% AMAN (KOKOH)' 
+                                : pullForce < 30
+                                ? '65% PREKULIKULER'
+                                : '0% LONGSOR TOTAL!'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bottom feedback dialog prompt explaining structural action */}
+                        <div className="z-25 bg-black/75 backdrop-blur-md p-3.5 rounded-[22px] border border-white/5 space-y-1 shadow-2xl">
+                          <p className="text-[10px] text-zinc-100 font-black tracking-tight leading-tight uppercase flex items-center gap-1.5">
+                            {hasRoots ? (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                <span className="text-emerald-400">PASAK JANGKAR MENGIKAT BUTIRAN</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                <span className="text-red-400">STRUKTUR KRITIS (GAYA GESEK RENDAH)</span>
+                              </>
+                            )}
+                          </p>
+                          <p className="text-[9px] text-zinc-350 font-semibold leading-normal">
+                            {hasRoots
+                              ? 'Akar mengikat dan menahan partikel-partikel batuan dangkalan bumi. Meskipun gaya tarikan Anda dinaikkan, tegangan geser didistribusikan merata ke sekat bawah, menghentikan longsoran.'
+                              : pullForce < 30
+                              ? 'Tanah di lereng hanya ditahan oleh gesekan mekanis ringkas antar butiran pasir yang gembur. Tarikan sedikit saja dapat membelah tanah.'
+                              : 'KO HESI NOL! Butiran tanah gundul yang tidak diikat akar runtuh akibat tak sanggup membendung beban geser melintasi kemiringan.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* --- "SENTUH & TARIK" INTERACTIVE SLIDER --- */}
+                      <div className="bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-sm space-y-3.5">
+                        <div className="flex justify-between items-center text-[10px] font-black tracking-wider text-stone-600">
+                          <span className="uppercase text-[9px]">🪵 KEKUATAN TARIKAN SISWA:</span>
+                          <span className="font-mono text-xs text-stone-900 bg-stone-100 px-2 py-0.5 rounded-md">
+                            {pullForce} kN (Kilo Newton)
+                          </span>
+                        </div>
+
+                        <div className="relative">
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={pullForce}
+                            onChange={(e) => {
+                              const v = Number(e.target.value);
+                              setPullForce(v);
+                              if (v > 10 && v % 25 === 0) {
+                                playSound('knock');
+                              }
+                              if (!hasRoots && v === 35) {
+                                playSound('failure');
+                              }
+                            }}
+                            className="w-full h-2.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-900"
+                          />
+                          <div className="flex justify-between text-[8px] font-bold text-stone-400 mt-1.5 uppercase">
+                            <span>Sila Sentuh & Tarik</span>
+                            <span>Maksimal 100 kN</span>
+                          </div>
+                        </div>
+
+                        {/* Interactive Warning banner depending on force and roots */}
+                        {pullForce > 10 && (
+                          <div className={`p-3 rounded-2xl border flex gap-2 items-center ${
+                            hasRoots
+                              ? 'bg-green-50 border-green-200 text-green-800'
+                              : 'bg-red-50 border-red-200 text-red-800 animate-pulse'
+                          }`}>
+                            <span className="text-sm shrink-0">{hasRoots ? '🛡️' : '🚨'}</span>
+                            <div className="text-[9.5px] font-bold leading-snug">
+                              {hasRoots ? (
+                                <span>Akar kokoh memberikan kohesi tinggi. Gaya penolakan tebing {pullForce} kN berhasil digagalkan dengan aman!</span>
+                              ) : pullForce < 45 ? (
+                                <span>Gaya gesek butiran mulai jenuh! Sedikit lagi tanah akan mengalami retakan geser besar.</span>
+                              ) : (
+                                <span>Hukum runtuhan pasir bekerja! Lereng bergeser ke lembah karena gaya beban gravitasi {pullForce} kN melampaui kohesi nol.</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* --- MEKANIKA Deep Dive Lessons Cards --- */}
+                      <div className="space-y-3">
+                        <div className="bg-lime-50/50 p-4.5 rounded-[24px] border border-lime-200/60 text-left space-y-1.5">
+                          <h4 className="font-extrabold text-[#365314] text-xs uppercase tracking-wide flex items-center gap-1.5">
+                            <span>📌 1. Analisis Gaya Gesek</span>
+                          </h4>
+                          <p className="text-[10px] text-lime-950 font-semibold leading-relaxed">
+                            Akar pohon bertindak sebagai <strong>"Pasak Mekanis" (Anchor)</strong> yang menembus sela-sela formasi batuan keras. Jaringan anyaman sela-sela akar ini mengunci butiran-butiran pasir lepas, menolak pergeseran bidang miring tanah laksana sekrup penguat di dinding batu.
+                          </p>
+                        </div>
+
+                        <div className="bg-rose-50/50 p-4.5 rounded-[24px] border border-rose-200/60 text-left space-y-1.5">
+                          <h4 className="font-extrabold text-[#881337] text-xs uppercase tracking-wide flex items-center gap-1.5">
+                            <span>📌 2. Analisis Kohesi Tanah</span>
+                          </h4>
+                          <p className="text-[10px] text-rose-955 font-semibold leading-relaxed">
+                            Tanpa anyaman akar, butiran tanah terjal hanya mengandalkan gaya gesek antar butiran (Internal Friction Angle) yang renggang. Sesaat ketika hujan datang, air meresap dan bertindak sebagai <strong>lubrikan/pelicin</strong> yang memisahkan jalinan butir, melondongkan masa tanah runtuh ke lembah akibat heretan gaya gravitasi murni tanpa hambatan.
+                          </p>
+                        </div>
+                      </div>
+
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="tab-b"
+                      initial={{ opacity: 0, x: 15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -15 }}
+                      className="space-y-6"
+                    >
+                      {/* Sub-Header */}
+                      <div className="space-y-1">
+                        <span className="text-[8px] font-black tracking-widest text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 uppercase">
+                          Sains Hidrologi & Siklus Air
+                        </span>
+                        <h3 className="text-lg font-black text-stone-900 uppercase tracking-tight">
+                          2️⃣ Analisis Infiltrasi & Spons Raksasa
+                        </h3>
+                        <p className="text-[10px] text-stone-500 font-bold leading-snug">
+                          Uji aliran air hujan dan saksikan kinerja absorpsi pori akar di dua kondisi area hutan yang berbeda!
+                        </p>
+                      </div>
+
+                      {/* AREA SELECTOR COMPARATIVE */}
+                      <div className="grid grid-cols-2 gap-2 bg-stone-50 p-1.5 rounded-2xl border border-stone-200/80">
+                        <button
+                          onClick={() => {
+                            playSound('knock');
+                            setSelectedArea('harangan');
+                          }}
+                          className={`py-2 px-1 text-[9.5px] font-extrabold uppercase rounded-xl transition-all flex items-center justify-center gap-1 ${
+                            selectedArea === 'harangan'
+                              ? 'bg-emerald-700 text-white shadow'
+                              : 'text-stone-500 hover:bg-stone-200/50'
+                          }`}
+                        >
+                          🟢 Hutan Larangan (Lestari)
+                        </button>
+                        <button
+                          onClick={() => {
+                            playSound('knock');
+                            setSelectedArea('gundul');
+                          }}
+                          className={`py-2 px-1 text-[9.5px] font-extrabold uppercase rounded-xl transition-all flex items-center justify-center gap-1 ${
+                            selectedArea === 'gundul'
+                              ? 'bg-amber-700 text-white shadow'
+                              : 'text-stone-500 hover:bg-stone-200/50'
+                          }`}
+                        >
+                          🟤 Lahan Gundul (Gundul)
+                        </button>
+                      </div>
+
+                      {/* WEATHER SIMULATOR INTERACTIVE ANIMATION */}
+                      <div className="relative aspect-[4/3] bg-gradient-to-b from-teal-950 to-zinc-950 rounded-[32px] overflow-hidden border-2 border-stone-800 shadow-2xl p-4 flex flex-col justify-between">
+                        <style>{`
+                          @keyframes rainDrop {
+                            0% { transform: translateY(-30px); opacity: 0; }
+                            50% { opacity: 0.6; }
+                            100% { transform: translateY(160px); opacity: 0; }
+                          }
+                          @keyframes runOffSlide {
+                            0% { transform: translateX(0) translateY(0); opacity: 0; }
+                            30% { opacity: 0.8; }
+                            100% { transform: translateX(110px) translateY(85px); opacity: 0; }
+                          }
+                          .rain-drop {
+                            position: absolute;
+                            width: 1.5px;
+                            height: 10px;
+                            background: #60a5fa;
+                            opacity: 0;
+                            pointer-events: none;
+                            animation: rainDrop 1.5s infinite linear;
+                          }
+                          .run-off-flow {
+                            position: absolute;
+                            width: 4px;
+                            height: 4px;
+                            background: #f87171;
+                            border-radius: 50%;
+                            animation: runOffSlide 1.3s infinite linear;
+                          }
+                        `}</style>
+
+                        {/* Rain visual particles generation */}
+                        <div className="absolute inset-x-0 top-0 h-40 pointer-events-none z-10 overflow-hidden">
+                          <div className="rain-drop left-[10%]" style={{ animationDelay: '0s', animationDuration: '1.2s' }} />
+                          <div className="rain-drop left-[25%]" style={{ animationDelay: '0.3s', animationDuration: '1.5s' }} />
+                          <div className="rain-drop left-[40%]" style={{ animationDelay: '0.7s', animationDuration: '1.1s' }} />
+                          <div className="rain-drop left-[55%]" style={{ animationDelay: '0.1s', animationDuration: '1.4s' }} />
+                          <div className="rain-drop left-[70%]" style={{ animationDelay: '0.5s', animationDuration: '1.3s' }} />
+                          <div className="rain-drop left-[85%]" style={{ animationDelay: '0.9s', animationDuration: '1.6s' }} />
+                        </div>
+
+                        {/* Comparative Landscape View */}
+                        <div className="absolute inset-0 z-0">
+                          <svg className="w-full h-full" viewBox="0 0 320 240">
+                            {/* Slanted Slope Earth background */}
+                            <path d="M -10,130 Q 160,150 330,175 L 330,250 L -10,250 Z" fill="#18181b" stroke="#3f3f46" strokeWidth="2" />
+                            
+                            {/* Ground surface layers overlay */}
+                            {selectedArea === 'harangan' ? (
+                              <>
+                                {/* Dense Green Grass & Silt */}
+                                <path d="M -10,130 Q 160,150 330,175" fill="none" stroke="#059669" strokeWidth="6" />
+                                {/* Root pore tunnels paths */}
+                                <g className="stroke-[#3b82f6]/40 opacity-70" strokeWidth="3" fill="none" strokeDasharray="3,3">
+                                  <path d="M 60,135 Q 75,170 85,210" />
+                                  <path d="M 160,143 Q 140,180 135,220" />
+                                  <path d="M 240,155 Q 260,195 245,230" />
+                                </g>
+
+                                {/* Groundwater recharge reservoir graphic (glowing blue sponge indicator) */}
+                                <ellipse cx="160" cy="205" rx="90" ry="25" fill="#1d4ed8" className="opacity-30 blur-md animate-pulse" />
+                                <text x="160" y="210" fill="#93c5fd" fontSize="8" fontWeight="bold" textAnchor="middle" className="font-mono uppercase opacity-80">
+                                  💧 SPONS AIR TANAH PENUH
+                                </text>
+
+                                {/* Base Springs (Clear blue drop flows from spring base) */}
+                                <path d="M 30,133 Q 15,160 5,200" stroke="#3b82f6" strokeWidth="2" fill="none" />
+                                <circle cx="5" cy="200" r="3" fill="#60a5fa" className="animate-ping" />
+                              </>
+                            ) : (
+                              <>
+                                {/* Cracked dried gundul land top soil (brown/red color) */}
+                                <path d="M -10,130 Q 160,150 330,175" fill="none" stroke="#92400e" strokeWidth="6" />
+                                <g className="stroke-red-400" strokeWidth="1">
+                                  <line x1="85" y1="139" x2="85" y2="148" />
+                                  <line x1="180" y1="147" x2="183" y2="155" />
+                                  <line x1="260" y1="156" x2="258" y2="164" />
+                                </g>
+
+                                {/* No Water Sponge Waterway is empty */}
+                                <text x="160" y="210" fill="#ef4444" fontSize="8" fontWeight="bold" textAnchor="middle" className="font-mono uppercase opacity-70">
+                                  🏜️ KERING & TANDUS (KOSONG)
+                                </text>
+                              </>
+                            )}
+                          </svg>
+
+                          {/* Red Water streams sliding downhill for bare gundul area representing run-off */}
+                          {selectedArea === 'gundul' && (
+                            <>
+                              <div className="run-off-flow left-[20%] top-[40%]" style={{ animationDelay: '0s' }} />
+                              <div className="run-off-flow left-[45%] top-[45%]" style={{ animationDelay: '0.4s' }} />
+                              <div className="run-off-flow left-[70%] top-[50%]" style={{ animationDelay: '0.8s' }} />
+                              
+                              {/* Flooded town indicators at base */}
+                              <div className="absolute bottom-16 right-4 bg-red-950/90 text-red-500 border border-red-800/80 rounded px-2 py-0.5 text-[7px] font-black uppercase animate-bounce">
+                                🌊 BANJIR RUN-OFF TINGGI
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* UI Overlay display text inside the screen */}
+                        <div className="z-15 text-left bg-black/60 backdrop-blur-sm p-3.5 rounded-[22px] border border-white/5 space-y-1">
+                          <h4 className="text-[10px] font-black text-stone-100 uppercase tracking-wide">
+                            {selectedArea === 'harangan' 
+                              ? '🔄 SISTEM RESERVOIR SPONS (Lestari)' 
+                              : '💥 RUNTUHNYA DAERAH TANGKAPAN AIR (Gundul)'}
+                          </h4>
+                          <ul className="text-[8.5px] text-stone-300 font-semibold leading-normal list-disc pl-3.5 space-y-1">
+                            {selectedArea === 'harangan' ? (
+                              <>
+                                <li><strong>Proses Infiltrasi Aktif:</strong> Pori-pori di akar menyalurkan air hujan masuk menembus tanah tanpa mengikis permukaan.</li>
+                                <li><strong>Penyaring Alami:</strong> Spons bumi menyaring air keruh menjadi mata air pegunungan yang sangat bening secara bertahap.</li>
+                              </>
+                            ) : (
+                              <>
+                                <li><strong>Hampir Nol Infiltrasi:</strong> Air mengalir bebas lurus di atas permukaan tanah liat keras pelindung botak.</li>
+                                <li><strong>Mutilasi Banjir Bandang:</strong> Sedimen lumpur ikut terseret jatuh, mendatangkan petaka banjir di perkampungan hilir.</li>
+                              </>
+                            )}
+                          </ul>
+                        </div>
+
+                        {/* Simulation metric panel footer */}
+                        <div className="z-15 flex justify-between items-center text-[7.5px] font-mono text-zinc-350 bg-stone-900/90 py-1.5 px-3 rounded-full border border-stone-800/50">
+                          <span>INFILTRASI (I): {selectedArea === 'harangan' ? 'Tinggi (92%)' : 'Sangat Rendah (4%)'}</span>
+                          <span>RUN-OFF (R): {selectedArea === 'harangan' ? 'Sangat Kecil (8%)' : 'Amat Tinggi (96%)'}</span>
+                        </div>
+                      </div>
+
+                      {/* --- HIDROLOGI SAINS Deep Dive (Infiltrasi & Spons) --- */}
+                      <div className="space-y-4">
+                        <div className="bg-white p-5 rounded-[28px] border-2 border-stone-100 shadow-sm space-y-3">
+                          <span className="text-[8px] font-black tracking-widest text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full uppercase">Penjelasan Sains</span>
+                          <div className="space-y-3.5 text-[11px] font-semibold text-stone-700 leading-relaxed">
+                            <p>
+                              🟢 <strong>Pori Akar (Infiltrasi):</strong> Di dalam Hutan Larangan, tumpukan serasah daun mati & anyaman akar gembur menciptakan milyaran pori mikro makro tanah. Air hujan tidak langsung lari meninggi sebagai limpasan banjir (run-off), melainkan diserap masuk (infiltrasi) merambat ke lapisan bawah tanah.
+                            </p>
+                            <p>
+                              🔵 <strong>Spons Raksasa (Groundwater Sponge):</strong> Hutan lestari bertindak bagaikan spons penahan raksasa. Menyerap air melimpah di musim hujan untuk disimpan di bawah tanah, kemudian menyuplainya perlahan-lahan ke mata air jernih tatkala musim kemarau panjang membakar lereng.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* --- RUMUS FISIKA IPA (LaTeX styled card formula) --- */}
+                        <div className="bg-[#e0f2fe] border-2 border-blue-200 p-5 rounded-[28px] text-center space-y-3 shadow-inner">
+                          <span className="text-[8px] font-black tracking-widest text-blue-700 bg-blue-100 px-3 py-0.5 rounded-full uppercase border border-blue-200">
+                            Persamaan Keseimbangan Siklus Air
+                          </span>
+                          
+                          <div className="py-2.5">
+                            <div className="font-mono text-xl font-black text-blue-950 tracking-wide uppercase select-none animate-pulse">
+                              P = I + R
+                            </div>
+                            <div className="text-[8.5px] text-blue-700 font-bold uppercase tracking-widest mt-1">
+                              (Presipitasi = Infiltrasi + Run-off)
+                            </div>
+                          </div>
+
+                          <div className="text-left bg-white/70 p-3.5 rounded-2xl border border-blue-100/50 space-y-1.5 text-[10px] text-blue-900 font-semibold leading-normal">
+                            <h5 className="font-black text-[10.5px] text-blue-950 uppercase">Hubungan Parameter Hidrologi:</h5>
+                            <p>
+                              • <strong>P (Presipitasi):</strong> Curah hujan total yang jatuh ke bumi.
+                            </p>
+                            <p>
+                              • <strong>I (Infiltrasi):</strong> Laju penyerapan air masuk lewat pori akar pohon.
+                            </p>
+                            <p>
+                              • <strong>R (Run-off):</strong> Aliran permukaan liar yang merangsang luapan banjir bandang.
+                            </p>
+                            <div className="h-[1px] bg-blue-200 my-1" />
+                            <p className="italic text-[9.5px] font-black leading-snug">
+                              ⚠️ Hukum Kekekalan Aliran: Jika Hutan Larangan ditebang gundul, laju Infiltrasi (I) anjlok mendekati nol. Hal ini memaksa nilai Run-off (R) membubung tinggi drastis. Hasil fisika tak terelakkan: Longsor dahsyat di atas tebing & banjir merusak di area perumahan!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Main Action navigation footer button */}
                 <button 
-                  onClick={() => setCurrentPage('joyful')}
-                  className="w-full bg-stone-900 hover:bg-stone-850 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-transform uppercase tracking-widest text-xs"
+                  onClick={() => {
+                    playSound('knock');
+                    setCurrentPage('joyful');
+                  }}
+                  className="w-full bg-stone-900 hover:bg-stone-850 text-white font-black py-4.5 rounded-[22px] flex items-center justify-center gap-2 text-xs uppercase tracking-widest shadow-xl transition-all hover:scale-[1.01] active:scale-[0.98] border-b-4 border-stone-950"
                 >
-                  Mulai Game Penjaga Harangan
-                  <Trees size={14} className="text-teal-400" />
+                  <span>Mulai Game Penjaga Harangan</span>
+                  <ChevronRight size={15} className="text-teal-400 shrink-0" />
                 </button>
               </div>
             </div>
